@@ -4,6 +4,8 @@ A comprehensive, standalone AVD infrastructure sizing and cost estimation tool b
 
 **Based entirely on [Microsoft Official AVD Documentation](https://learn.microsoft.com/en-us/azure/virtual-desktop/).**
 
+![AVD Enterprise Solution Sizer — Main Page](screenshot.png)
+
 ---
 
 ## Why This Tool?
