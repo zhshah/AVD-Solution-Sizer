@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azure Virtual Desktop — Enterprise Solution Sizer</title>
+<style>
+:root {
+  --blue: #0078D4; --dk-blue: #1B3A5C; --lt-blue: #E8F1FB; --green: #107C10;
+  --orange: #CA5010; --red: #D13438; --gray: #6B7280; --lt-gray: #F9FAFB;
+  --border: #E5E7EB; --bg: #F3F4F6; --white: #FFFFFF;
+  --accent: #0078D4; --accent-dark: #005A9E; --accent-light: #C7E0F4;
+  --radius: 10px; --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,0.08); --transition: all 0.25s ease;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;color:#323130;line-height:1.5;background:var(--bg);}
+a{color:var(--blue);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* === HEADER === */
+.header{background:#1B3A5C;color:#fff;padding:20px 32px;display:flex;align-items:center;gap:20px;position:relative;}
+.header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--accent);}
+.brand-cluster{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.brand-cluster svg{flex-shrink:0;}
+.header-title-group{flex:1;min-width:0;}
+.header h1{font-size:20px;font-weight:600;letter-spacing:-0.2px;}
+.header .sub{font-size:12px;opacity:.7;margin-top:2px;font-weight:400;}
+.header .team-badge{display:inline-block;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:4px;padding:2px 12px;font-size:10px;font-weight:500;letter-spacing:.3px;margin-top:5px;}
+.header-right{margin-left:auto;display:flex;gap:8px;}
+.hdr-btn{padding:7px 16px;border:1px solid rgba(255,255,255,.2);border-radius:6px;background:rgba(255,255,255,.06);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:var(--transition);}
+.hdr-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);}
+
+/* === PROGRESS === */
+.progress-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:stretch;overflow-x:auto;}
+.progress-bar::-webkit-scrollbar{height:0;}
+.step{flex:1;min-width:100px;padding:12px 8px;text-align:center;font-size:11px;font-weight:600;color:var(--gray);cursor:pointer;position:relative;transition:var(--transition);border-bottom:2px solid transparent;white-space:nowrap;}
+.step:hover{color:var(--accent);background:#F8FAFC;}
+.step.active{color:var(--accent);border-bottom-color:var(--accent);background:#F8FAFC;}
+.step.done{color:var(--green);}
+.step .snum{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--lt-gray);color:var(--gray);font-size:10px;align-items:center;justify-content:center;margin-right:5px;font-weight:700;border:1.5px solid var(--border);}
+.step.active .snum{background:var(--accent);color:#fff;border-color:var(--accent);}
+.step.done .snum{background:var(--green);color:#fff;border-color:var(--green);}
+
+/* === TAB CONTENT === */
+.tabs-container{max-width:1100px;margin:0 auto;padding:20px 28px 80px;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* === CARDS === */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:24px 26px;margin-bottom:16px;box-shadow:var(--shadow);transition:box-shadow 0.25s ease;}
+.card:hover{box-shadow:var(--shadow-lg);}
+.card h3{font-size:15px;color:var(--dk-blue);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.card h4{font-size:11px;color:var(--accent);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;}
+
+/* === FORMS === */
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:11px;font-weight:600;color:var(--gray);margin-bottom:4px;letter-spacing:.2px;}
+.fg input[type=text],.fg input[type=number],.fg input[type=date],.fg select,.fg textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;color:#1F2937;background:#fff;transition:var(--transition);}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,120,212,.1);}
+.fg textarea{resize:vertical;min-height:60px;}
+.fg .hint{font-size:10px;color:var(--gray);margin-top:3px;display:block;font-style:italic;line-height:1.4;}
+.fg .req{color:var(--red);}
+.row{display:grid;gap:12px;}.r2{grid-template-columns:1fr 1fr;}.r3{grid-template-columns:1fr 1fr 1fr;}.r4{grid-template-columns:1fr 1fr 1fr 1fr;}
+
+.toggle-group{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.tog{padding:8px 16px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:var(--gray);text-align:center;transition:var(--transition);font-family:inherit;}
+.tog.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+.tog:hover:not(.on){border-color:var(--accent);color:var(--accent);background:#F8FAFC;}
+
+.cb-group{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;}
+.cb-group input[type=checkbox]{accent-color:var(--blue);width:16px;height:16px;}
+
+/* callouts */
+.callout{border-radius:6px;padding:12px 16px;margin:12px 0;font-size:12px;line-height:1.5;border-left:4px solid;}
+.callout.info{background:#EFF6FF;border-color:#3B82F6;border-left-color:#3B82F6;}
+.callout.warn{background:#FFFBEB;border-color:#F59E0B;border-left-color:#F59E0B;}
+.callout.error{background:#FEF2F2;border-color:#EF4444;border-left-color:#EF4444;}
+.callout.ok{background:#F0FDF4;border-color:#22C55E;border-left-color:#22C55E;}
+.callout strong{display:block;margin-bottom:3px;}
+.callout ul{margin:6px 0 0 16px;padding:0;}
+.callout ul li{margin-bottom:4px;}
+
+/* persona cards */
+.persona-card{border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:14px;background:#fff;position:relative;transition:var(--transition);}
+.persona-card:hover{box-shadow:var(--shadow-lg);}
+.persona-card .p-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.persona-card .p-tag{font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 10px;border-radius:3px;}
+.rm-btn{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;font-weight:700;line-height:1;}
+.rm-btn:hover{opacity:.6;}
+.add-btn{width:100%;padding:12px;border:2px dashed var(--border);border-radius:var(--radius);background:transparent;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:var(--transition);}
+.add-btn:hover{border-color:var(--accent);background:#F8FAFC;}
+
+/* === NAV BUTTONS === */
+.nav-row{display:flex;justify-content:space-between;margin-top:20px;}
+.btn{padding:10px 24px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:var(--transition);display:flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:var(--accent-dark);}
+.btn-secondary{background:#fff;color:var(--accent);border:1px solid var(--border);}.btn-secondary:hover{background:#F8FAFC;border-color:var(--accent);}
+.btn-green{background:var(--green);color:#fff;}.btn-green:hover{background:#0B5E0B;}
+
+/* === RESULTS === */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:16px 0;}
+.m-box{border:1px solid var(--border);border-radius:var(--radius);padding:16px;background:#fff;text-align:center;transition:var(--transition);}
+.m-box:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+.m-box .num{font-size:28px;font-weight:700;color:var(--accent);display:block;}
+.m-box .lbl{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-top:4px;}
+
+table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0;border-radius:var(--radius);overflow:hidden;}
+table th{background:var(--dk-blue);color:#fff;padding:10px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
+table td{padding:8px 12px;border-bottom:1px solid var(--border);}
+table tr:nth-child(even) td{background:#F9FAFB;}
+table tr:hover td{background:var(--lt-blue);}
+.total-row td{background:var(--lt-blue)!important;font-weight:700;border-top:2px solid var(--accent);}
+.total-row:hover td{background:var(--accent-light)!important;}
+
+.formula{background:#F5F5F5;border:1px solid #E0E0E0;border-radius:4px;padding:8px 12px;font-family:'Cascadia Code','Consolas',monospace;font-size:11px;margin:8px 0;color:#333;line-height:1.6;}
+.doc-ref{font-size:10px;color:var(--blue);font-style:italic;margin-top:4px;display:block;}
+
+.section-title{font-size:16px;color:var(--dk-blue);margin:20px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--blue);}
+.disclaimer{background:#FFFBEB;border:1px solid #FCD34D;border-radius:var(--radius);padding:14px 18px;margin:14px 0;font-size:12px;}
+.disclaimer strong{color:#92400E;}
+
+/* === PRINT === */
+@media print{
+  @page{margin:15mm 12mm;}
+  body{background:#fff;font-size:11px;}
+  .header{-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:12px 20px;}
+  .progress-bar,.nav-row,.hdr-btn,.add-btn,.rm-btn,.no-print{display:none!important;}
+  .tabs-container{padding:0 10px;max-width:100%;}
+  .tab-panel{display:none!important;}
+  .tab-panel#tab9{display:block!important;}
+  .card{break-inside:avoid;box-shadow:none;border:1px solid #ccc;margin-bottom:10px;page-break-inside:avoid;}
+  table{page-break-inside:auto;}
+  table tr{page-break-inside:avoid;}
+  table th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .section-title{page-break-before:auto;}
+  .metric-grid .m-box{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .m-box .num{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .callout{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .disclaimer{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .total-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .print-header{display:block!important;text-align:center;border-bottom:3px solid #003B73;padding-bottom:12px;margin-bottom:16px;}
+  .print-header h2{font-size:20px;color:#003B73;margin-bottom:4px;}
+  .print-header .print-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;text-align:left;max-width:600px;margin:10px auto 0;font-size:11px;color:#605E5C;}
+  .print-header .print-meta-grid strong{color:#323130;}
+  .print-footer{display:block!important;text-align:center;font-size:9px;color:#605E5C;border-top:1px solid #EDEBE9;padding-top:8px;margin-top:16px;}
+  .print-header svg{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .site-footer{display:none!important;}
+}
+.print-header{display:none;}
+.print-footer{display:none;}
+
+@media(max-width:768px){
+  .row.r2,.row.r3,.row.r4{grid-template-columns:1fr;}
+  .progress-bar{padding:0 8px;}
+  .step{min-width:70px;font-size:9px;padding:6px 4px;}
+  .tabs-container{padding:12px 12px 80px;}
+  .team-badge{display:none;}
+  .brand-cluster svg{width:100px;}
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.tab-panel.active{animation:fadeIn .3s ease-out;}
+
+/* === PERSISTENT SITE FOOTER === */
+.site-footer{background:var(--dk-blue);color:rgba(255,255,255,.6);padding:16px 32px;font-size:11px;line-height:1.7;position:relative;display:flex;align-items:center;gap:20px;}
+.site-footer::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);}
+.site-footer a{color:#93C5FD;text-decoration:none;}
+.site-footer a:hover{text-decoration:underline;color:#fff;}
+.site-footer .sf-brand{flex-shrink:0;display:flex;align-items:center;}
+.site-footer .sf-content{flex:1;text-align:center;}
+.site-footer .sf-divider{width:60px;height:1px;background:rgba(255,255,255,.12);margin:6px auto;}
+.site-footer .sf-developer{font-size:10px;color:rgba(255,255,255,.45);}
+.site-footer .sf-developer strong{color:rgba(255,255,255,.65);}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="brand-cluster">
+    <svg xmlns="http://www.w3.org/2000/svg" width="130" height="28" viewBox="0 0 493 107">
+      <rect x="1" y="1" width="49" height="49" fill="#f25022"/>
+      <rect x="52" y="1" width="49" height="49" fill="#7fba00"/>
+      <rect x="1" y="52" width="49" height="49" fill="#00a4ef"/>
+      <rect x="52" y="52" width="49" height="49" fill="#ffb900"/>
+      <text x="120" y="76" fill="#ffffff" font-family="Segoe UI,sans-serif" font-size="82" font-weight="600" letter-spacing="-1">Microsoft</text>
+    </svg>
+  </div>
+  <div class="header-title-group">
+    <h1>Azure Virtual Desktop — Enterprise Solution Sizer</h1>
+    <div class="sub">Comprehensive AVD Design &amp; Sizing Tool — Based on Microsoft Official Documentation</div>
+    <div class="team-badge">Microsoft Qatar · Cloud &amp; AI Solutions</div>
+  </div>
+  <div class="header-right">
+    <button class="hdr-btn no-print" onclick="exportPDF()">📄 Export PDF</button>
+    <button class="hdr-btn no-print" onclick="exportExcel()">📊 Export Excel</button>
+  </div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar no-print" id="progressBar">
+  <div class="step active" data-tab="0" onclick="goTab(0)"><span class="snum">1</span>Environment</div>
+  <div class="step" data-tab="1" onclick="goTab(1)"><span class="snum">2</span>Users &amp; Licensing</div>
+  <div class="step" data-tab="2" onclick="goTab(2)"><span class="snum">3</span>Host Pools</div>
+  <div class="step" data-tab="3" onclick="goTab(3)"><span class="snum">4</span>Identity</div>
+  <div class="step" data-tab="4" onclick="goTab(4)"><span class="snum">5</span>Storage &amp; Profiles</div>
+  <div class="step" data-tab="5" onclick="goTab(5)"><span class="snum">6</span>Networking</div>
+  <div class="step" data-tab="6" onclick="goTab(6)"><span class="snum">7</span>BCDR</div>
+  <div class="step" data-tab="7" onclick="goTab(7)"><span class="snum">8</span>Reserved Instance</div>
+  <div class="step" data-tab="8" onclick="goTab(8)"><span class="snum">9</span>ACR Estimation</div>
+  <div class="step" data-tab="9" onclick="goTab(9)"><span class="snum">10</span>Results</div>
+</div>
+
+<div class="tabs-container">
+
+<!-- PRINT HEADER (only visible in print) -->
+<div class="print-header">
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="110" height="24" viewBox="0 0 493 107">
+      <rect x="1" y="1" width="49" height="49" fill="#f25022"/>
+      <rect x="52" y="1" width="49" height="49" fill="#7fba00"/>
+      <rect x="1" y="52" width="49" height="49" fill="#00a4ef"/>
+      <rect x="52" y="52" width="49" height="49" fill="#ffb900"/>
+      <text x="120" y="76" fill="#003B73" font-family="Segoe UI,sans-serif" font-size="82" font-weight="600" letter-spacing="-1">Microsoft</text>
+    </svg>
+    <span style="font-size:12px;color:#605E5C;">|</span>
+    <span style="font-size:13px;font-weight:600;color:#003B73;letter-spacing:.3px;">Cloud &amp; AI Solutions · Qatar</span>
+  </div>
+  <h2 id="printTitle">Azure Virtual Desktop — Solution Sizing Report</h2>
+  <div class="print-meta-grid" id="printMeta"></div>
+  <div style="margin-top:8px;font-size:10px;color:#605E5C;">Opportunity Sizing</div>
+</div>
+<!-- PRINT FOOTER (only visible in print) -->
+<div class="print-footer">
+  Microsoft Qatar · Cloud &amp; AI Solutions | Azure Virtual Desktop — Enterprise Solution Sizer | Based on Microsoft Official AVD Documentation | May 2026<br>
+  Solution developed by Zahir Hussain Shah · Sr. Solution Engineer, Cloud &amp; AI – Infra · zashah@microsoft.com
+</div>
+
+<!-- ==================== TAB 0: ENVIRONMENT ==================== -->
+<div class="tab-panel active" id="tab0">
+<div class="card">
+  <h3>⚙️ Environment &amp; Project Setup</h3>
+  <div class="row r2">
+    <div class="fg"><label>Project Name <span class="req">*</span></label><input type="text" id="projectName" placeholder="e.g. AVD Deployment — Phase 1"><span class="hint">Internal project or engagement name for tracking and report headers</span></div>
+    <div class="fg"><label>Customer / Organization <span class="req">*</span></label><input type="text" id="customerName" placeholder="e.g. General Authority"><span class="hint">Customer or tenant organization this sizing is prepared for</span></div>
+  </div>
+  <div class="row r2">
+    <div class="fg"><label>Prepared By</label><input type="text" id="preparedBy" placeholder="e.g. Solution Engineer"><span class="hint">Name or role of the person preparing this sizing exercise</span></div>
+    <div class="fg"><label>Date</label><input type="date" id="reportDate"><span class="hint">Date this sizing exercise was prepared or last revised</span></div>
+  </div>
+
+  <h4>Deployment Purpose</h4>
+  <div class="toggle-group" id="deployPurpose">
+    <button class="tog on" data-val="poc" onclick="setToggle(this)">POC</button>
+    <button class="tog" data-val="pilot" onclick="setToggle(this)">Pilot</button>
+    <button class="tog" data-val="production" onclick="setToggle(this)">Production</button>
+    <button class="tog" data-val="dr" onclick="setToggle(this)">DR Planning</button>
+  </div>
+
+  <div class="row r3">
+    <div class="fg"><label>Azure Region (Session Hosts)</label>
+      <select id="azureRegion" onchange="onRegionChange()">
+        <option value="Qatar Central" selected>Qatar Central</option>
+        <option value="UAE North">UAE North</option>
+        <option value="West Europe">West Europe</option>
+        <option value="UK South">UK South</option>
+        <option value="North Europe">North Europe</option>
+        <option value="East US">East US</option>
+        <option value="East US 2">East US 2</option>
+        <option value="West US 2">West US 2</option>
+        <option value="Central US">Central US</option>
+        <option value="Australia East">Australia East</option>
+        <option value="Japan East">Japan East</option>
+        <option value="Canada Central">Canada Central</option>
+        <option value="South Central US">South Central US</option>
+        <option value="Central India">Central India</option>
+      </select>
+      <span class="hint">Azure region where session host VMs will be deployed; choose closest to users</span>
+    </div>
+    <div class="fg"><label>Metadata Region</label>
+      <select id="metadataRegion">
+        <option value="West Europe">West Europe</option>
+        <option value="UK South">UK South</option>
+        <option value="North Europe">North Europe</option>
+        <option value="East US">East US</option>
+        <option value="East US 2">East US 2</option>
+        <option value="West US 2">West US 2</option>
+        <option value="Central US">Central US</option>
+        <option value="Australia East">Australia East</option>
+        <option value="Japan East">Japan East</option>
+        <option value="Canada Central">Canada Central</option>
+        <option value="South Central US">South Central US</option>
+        <option value="Central India">Central India</option>
+      </select>
+      <span class="hint">AVD host pool metadata storage location</span>
+    </div>
+    <div class="fg"><label>Time Zone</label>
+      <select id="timeZone">
+        <option value="Arabian Standard Time (UTC+3)" selected>Arabian Standard Time (UTC+3)</option>
+        <option value="Gulf Standard Time (UTC+4)">Gulf Standard Time (UTC+4)</option>
+        <option value="GMT (UTC+0)">GMT (UTC+0)</option>
+        <option value="CET (UTC+1)">CET (UTC+1)</option>
+        <option value="Eastern Time (UTC-5)">Eastern Time (UTC-5)</option>
+        <option value="Pacific Time (UTC-8)">Pacific Time (UTC-8)</option>
+      </select>
+      <span class="hint">Local time zone used for autoscale schedules and business hours</span>
+    </div>
+  </div>
+
+  <div id="regionAdvisory"></div>
+
+  <h4>Data Residency</h4>
+  <div class="toggle-group" id="dataResidency">
+    <button class="tog on" data-val="commercial" onclick="setToggle(this)">Commercial</button>
+    <button class="tog" data-val="government" onclick="setToggle(this)">Government / Regulated</button>
+  </div>
+  <div id="govAdvisory"></div>
+</div>
+<div class="nav-row"><div></div><button class="btn btn-primary" onclick="goTab(1)">Next: Users &amp; Licensing →</button></div>
+</div>
+
+<!-- ==================== TAB 1: USERS & LICENSING ==================== -->
+<div class="tab-panel" id="tab1">
+<div class="card">
+  <h3>📋 Licensing</h3>
+  <div class="row r2">
+    <div class="fg"><label>Internal User License</label>
+      <select id="internalLicense">
+        <optgroup label="Microsoft 365">
+        <option value="M365 E3">Microsoft 365 E3</option>
+        <option value="M365 E5">Microsoft 365 E5</option>
+        <option value="M365 F3">Microsoft 365 F3</option>
+        <option value="M365 Business Premium">Microsoft 365 Business Premium</option>
+        <option value="M365 A3">Microsoft 365 A3 (Academic)</option>
+        <option value="M365 A5">Microsoft 365 A5 (Academic)</option>
+        <option value="M365 Student">Microsoft 365 Student Use Benefit</option>
+        </optgroup>
+        <optgroup label="Windows Per-User">
+        <option value="Win 11/10 Enterprise E3">Windows 11/10 Enterprise E3</option>
+        <option value="Win 11/10 Enterprise E5">Windows 11/10 Enterprise E5</option>
+        <option value="Win Education A3">Windows Education A3</option>
+        <option value="Win Education A5">Windows Education A5</option>
+        <option value="Win VDA per user">Windows VDA per user</option>
+        </optgroup>
+        <optgroup label="Windows Server">
+        <option value="RDS CAL (Windows Server)">RDS CAL with SA (Windows Server)</option>
+        <option value="RDS User Sub">RDS User Subscription Licenses (Windows Server)</option>
+        </optgroup>
+      </select>
+      <span class="hint">License that grants AVD access rights for internal users</span>
+    </div>
+    <div class="fg"><label>External User Access Pricing</label>
+      <select id="externalPricing" onchange="onExternalChange()">
+        <option value="none" selected>No external users</option>
+        <option value="full">Full Desktop — ~$10/user/mo (verify on pricing page)</option>
+        <option value="apps">Apps Only — ~$5.50/user/mo (verify on pricing page)</option>
+      </select>
+      <span class="hint">Per-user access pricing for external commercial purposes only</span>
+    </div>
+  </div>
+  <div class="callout info"><strong>ℹ️ Licensing Note</strong>
+  <ul>
+    <li>Internal users with eligible M365/Windows licenses access AVD at <strong>no additional service charge</strong>.</li>
+    <li>External users for <strong>external commercial purposes</strong> require per-user access pricing enrollment on the Azure subscription.</li>
+    <li>Per-user access pricing does <strong>not</strong> include Office, Microsoft Defender XDR, or Universal Print — those must be licensed separately.</li>
+    <li>Per-user pricing is <strong>not available</strong> for Windows Server operating systems.</li>
+    <li><a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/licensing" target="_blank">Source: Microsoft Learn — Licensing AVD</a></li>
+  </ul></div>
+</div>
+
+<div class="card">
+  <h3>👥 User Personas</h3>
+  <p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Define user groups with different workload requirements. Each persona generates its own host pool configuration.</p>
+  <div id="personasContainer">
+    <!-- Persona 1 default -->
+    <div class="persona-card" data-idx="0">
+      <div class="p-header"><span class="p-tag" style="background:#E3F2FD;color:#1565C0;">Persona 1</span><strong class="p-title">Knowledge Workers</strong></div>
+      <div class="row r2">
+        <div class="fg"><label>Persona Name</label><input type="text" class="pName" value="Knowledge Workers" oninput="this.closest('.persona-card').querySelector('.p-title').textContent=this.value"><span class="hint">Descriptive name for this user group (e.g. Finance Team, Call Center Agents)</span></div>
+        <div class="fg"><label>User Type</label><select class="pType"><option value="internal" selected>Internal</option><option value="external">External</option></select><span class="hint">Internal users are covered by M365 licenses; external users need per-user pricing</span></div>
+      </div>
+      <div class="row r3">
+        <div class="fg"><label>Total Users</label><input type="number" class="pUsers" value="100" min="1" max="50000"><span class="hint">Total users in this persona, including those not online simultaneously</span></div>
+        <div class="fg"><label>Concurrency %</label><input type="number" class="pConc" value="80" min="10" max="100"><span class="hint">% of users online simultaneously at peak</span></div>
+        <div class="fg"><label>Workload Type</label>
+          <select class="pWorkload">
+            <option value="light">Light — 6 users/vCPU</option>
+            <option value="medium" selected>Medium — 4 users/vCPU</option>
+            <option value="heavy">Heavy — 2 users/vCPU</option>
+            <option value="power">Power — 1 user/vCPU</option>
+          </select>
+          <span class="hint">Workload intensity determines users-per-vCPU ratio per MS VM sizing guidelines</span>
+        </div>
+      </div>
+      <div class="row r3">
+        <div class="fg"><label>Work Hours/Day</label><input type="number" class="pHours" value="8" min="1" max="24"><span class="hint">Average active hours per day; used for runtime cost estimation</span></div>
+        <div class="fg"><label>Work Days/Week</label><input type="number" class="pDays" value="5" min="1" max="7"><span class="hint">Working days per week; affects monthly runtime hours and costs</span></div>
+        <div class="fg"><label>Peak Logon Window (min)</label><input type="number" class="pPeakLogon" value="30" min="5" max="120"><span class="hint">Duration of morning logon storm</span></div>
+      </div>
+      <h4>Typical Applications</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--dk-blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Productivity</div>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Microsoft 365 (Office)" checked>Microsoft 365 (Office)</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Microsoft Teams" checked>Microsoft Teams</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Outlook / Exchange" checked>Outlook / Exchange</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="OneDrive / SharePoint">OneDrive / SharePoint</label>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--dk-blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Browsers & Web</div>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Microsoft Edge" checked>Microsoft Edge</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Google Chrome">Google Chrome</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Web-based LOB Apps">Web-based LOB Apps</label>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--dk-blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Development</div>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Visual Studio 2022">Visual Studio 2022</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="VS Code">VS Code</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="SQL Server Mgmt Studio">SQL Server Mgmt Studio</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Git / Azure DevOps">Git / Azure DevOps</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Docker / Containers">Docker / Containers</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="PowerShell / CLI Tools">PowerShell / CLI Tools</label>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--dk-blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Business / LOB</div>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="ERP / CRM (SAP, Dynamics)">ERP / CRM (SAP, Dynamics)</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Accounting / Finance">Accounting / Finance</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Data Analysis (Power BI, Excel)">Data Analysis (Power BI, Excel)</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Custom LOB Application">Custom LOB Application</label>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--dk-blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Creative / Engineering</div>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="CAD / 3D (AutoCAD, Revit)">CAD / 3D (AutoCAD, Revit)</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="Video / Media Editing">Video / Media Editing</label>
+          <label class="cb-group"><input type="checkbox" class="pApp" value="GIS / Mapping">GIS / Mapping</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="add-btn no-print" onclick="addPersona()">+ Add Another Persona</button>
+
+  <div class="callout info" style="margin-top:14px;">
+    <strong>📐 Microsoft Workload Classification</strong>
+    <strong style="font-size:11px;font-weight:400;">
+    Light: Data entry, command-line tools — 6 users/vCPU<br>
+    Medium: Word processors, static web pages, databases — 4 users/vCPU<br>
+    Heavy: Software engineers, content creators — Word, Outlook, PPT, dynamic web, dev tools — 2 users/vCPU<br>
+    Power: Graphic designers, 3D modelers — CAD/CAM, video editing, ML — 1 user/vCPU</strong>
+    <span class="doc-ref"><a href="https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/session-host-virtual-machine-sizing-guidelines" target="_blank">Source: MS Learn — Session host VM sizing guidelines</a></span>
+  </div>
+</div>
+<div class="nav-row"><button class="btn btn-secondary" onclick="goTab(0)">← Back</button><button class="btn btn-primary" onclick="goTab(2)">Next: Host Pools →</button></div>
+</div>
+
+<!-- ==================== TAB 2: HOST POOL DESIGN ==================== -->
+<div class="tab-panel" id="tab2">
+<div class="card">
+  <h3>🏗️ Host Pool Design</h3>
+  <p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Configure host pool type, VM SKU, autoscale, and redundancy for each persona. Cards auto-generated from Tab 2 personas.</p>
+  <div id="hostPoolContainer"><!-- Generated by JS --></div>
+</div>
+
+<div class="callout info">
+  <strong>📐 Microsoft VM Sizing Best Practice</strong>
+  Multi-session VMs: 4–24 vCPUs recommended. Under 4 = unstable UI. Over 32 = diminishing returns from synchronization overhead. For 20+ users, use multiple smaller VMs with breadth-first load balancing.
+  <span class="doc-ref"><a href="https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/session-host-virtual-machine-sizing-guidelines" target="_blank">Source: MS Learn — Session host VM sizing guidelines</a></span>
+</div>
+<div class="callout info">
+  <strong>📐 Application Group Types — Desktop vs RemoteApp</strong>
+  <ul>
+    <li><strong>Full Desktop (Desktop Application Group):</strong> Users receive a complete Windows desktop experience with Start menu, taskbar, and all installed apps. <strong>One</strong> Desktop app group per host pool. Available on both pooled and personal host pools.</li>
+    <li><strong>RemoteApp (Remote Application Group):</strong> Individual applications are published and streamed to the user's local device — they appear as native windows alongside local apps. <strong>Multiple</strong> RemoteApp groups per host pool. <strong>Available on pooled host pools only</strong> (not personal).</li>
+    <li><strong>Desktop + RemoteApp on same host pool:</strong> A pooled host pool can have both — one Desktop group and multiple RemoteApp groups. However, if a user is assigned to <strong>both</strong> types on the same pool, they <strong>only see the preferred application group type</strong> (configured at the host pool level) — not both. Assign different users to each type.</li>
+    <li><strong>Personal host pools:</strong> Only support <strong>Full Desktop</strong>. RemoteApp is not available for personal pools.</li>
+    <li><strong>Developer Scenarios:</strong> Developers typically benefit from <strong>Full Desktop</strong> with Personal host pools (1 VM per dev) for Visual Studio, Docker, Git, and debugging. RemoteApp on pooled pools works for publishing specific dev tools (e.g. SSMS, VS Code) to teams that don't need a full desktop.</li>
+  </ul>
+  <span class="doc-ref"><a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/terminology#application-groups" target="_blank">Source: MS Learn — AVD Application Groups</a> · <a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/preferred-application-group-type" target="_blank">Preferred App Group Type</a></span>
+</div>
+<div class="nav-row"><button class="btn btn-secondary" onclick="goTab(1)">← Back</button><button class="btn btn-primary" onclick="goTab(3)">Next: Identity →</button></div>
+</div>
+
+<!-- ==================== TAB 3: IDENTITY ==================== -->
+<div class="tab-panel" id="tab3">
+<div class="card">
+  <h3>🔐 Identity &amp; Security</h3>
+  <div class="row r2">
+    <div class="fg"><label>Identity Model</label>
+      <select id="identityModel" onchange="onIdentityChange()">
+        <option value="entra-only">Microsoft Entra ID Only</option>
+        <option value="entra-adds" selected>Entra ID + Active Directory DS</option>
+        <option value="entra-aadds">Entra ID + Entra Domain Services</option>
+      </select>
+      <span class="hint">Determines how user identities and session hosts are managed and joined</span>
+    </div>
+    <div class="fg"><label>Session Host Join Type</label>
+      <select id="joinType">
+        <option value="Hybrid Joined (AD DS)" selected>Hybrid Joined (AD DS)</option>
+        <option value="Microsoft Entra Joined">Microsoft Entra Joined</option>
+        <option value="AD DS Domain-Joined">AD DS Domain-Joined</option>
+        <option value="Entra Domain Services Joined">Entra Domain Services Joined</option>
+      </select>
+      <span class="hint">How session host VMs are registered — options depend on identity model</span>
+    </div>
+  </div>
+  <div class="row r3">
+    <div class="fg"><label>Single Sign-On (SSO)</label>
+      <select id="ssoEnabled"><option value="yes" selected>Enabled</option><option value="no">Disabled</option></select>
+      <span class="hint">Enables passwordless sign-in from Entra ID without re-authentication</span>
+    </div>
+    <div class="fg"><label>Multi-Factor Authentication</label>
+      <select id="mfaEnabled"><option value="required" selected>Required</option><option value="optional">Optional</option><option value="no">Disabled</option></select>
+      <span class="hint">Enforces MFA via Conditional Access before AVD access</span>
+    </div>
+    <div class="fg"><label>Conditional Access Policies</label>
+      <select id="condAccess"><option value="yes" selected>Yes</option><option value="no">No</option></select>
+      <span class="hint">Apply Entra ID rules such as compliant device, location, or risk-based policies</span>
+    </div>
+  </div>
+  <div class="row r2">
+    <div class="fg"><label>RDP Shortpath</label>
+      <select id="rdpShortpath">
+        <option value="none">None</option>
+        <option value="managed">Managed Networks Only</option>
+        <option value="public" selected>Public Networks</option>
+        <option value="both">Both</option>
+      </select>
+      <span class="hint">UDP-based direct transport for lower latency</span>
+    </div>
+    <div class="fg"><label>Client Access Method</label>
+      <select id="clientAccess">
+        <option value="windows-app" selected>Windows App</option>
+        <option value="web">Web Browser</option>
+        <option value="both">Both</option>
+      </select>
+      <span class="hint">Windows App is recommended; web browser requires no client installation</span>
+    </div>
+  </div>
+  <div id="identityAdvisory"></div>
+</div>
+<div class="callout info">
+  <strong>📐 Identity Scenarios (Microsoft Learn)</strong>
+  Entra ID Only: Session hosts joined to Entra ID, users in Entra ID. No on-prem AD required.<br>
+  Entra + AD DS: Hybrid identities synced via Entra Connect. Session hosts hybrid-joined or AD-joined.<br>
+  Entra + Entra Domain Services: Managed domain service. Users synced from Entra ID to AADDS automatically.
+  <span class="doc-ref"><a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/prerequisites#identity" target="_blank">Source: MS Learn — AVD Prerequisites: Identity</a></span>
+</div>
+<div class="nav-row"><button class="btn btn-secondary" onclick="goTab(2)">← Back</button><button class="btn btn-primary" onclick="goTab(4)">Next: Storage →</button></div>
+</div>
+
+<!-- ==================== TAB 4: STORAGE ==================== -->
+<div class="tab-panel" id="tab4">
+<div class="card">
+  <h3>💾 Profile Storage &amp; App Delivery</h3>
+  <h4>FSLogix Profile Container</h4>
+  <div class="row r3">
+    <div class="fg"><label>FSLogix Enabled</label>
+      <select id="fslogixEnabled"><option value="yes" selected>Yes (Recommended)</option><option value="no">No</option></select>
+      <span class="hint">Strongly recommended for profile roaming in pooled multi-session host pools</span>
+    </div>
+    <div class="fg"><label>Profile Size per User (GB)</label>
+      <input type="number" id="profileSizeGB" value="30" min="5" max="200">
+      <span class="hint">MS recommends 30 GB as standard baseline</span>
+    </div>
+    <div class="fg"><label>Container Type</label>
+      <select id="containerType">
+        <option value="profile-office" selected>Profile + Office Container</option>
+        <option value="profile-only">Profile Container Only</option>
+      </select>
+      <span class="hint">Office Container caches Outlook/OneDrive data separately for faster logon</span>
+    </div>
+  </div>
+  <div class="row r3">
+    <div class="fg"><label>Profile Storage Backend</label>
+      <select id="storageBackend">
+        <option value="azure-files-premium" selected>Azure Files Premium (recommended)</option>
+        <option value="azure-files-standard">Azure Files Standard</option>
+        <option value="azure-netapp-files">Azure NetApp Files (500+ users)</option>
+      </select>
+      <span class="hint">Azure Files Premium for &lt;500 users; NetApp Files for larger deployments</span>
+    </div>
+    <div class="fg"><label>Storage Redundancy</label>
+      <select id="storageRedundancy">
+        <option value="LRS" selected>LRS — Locally Redundant</option>
+        <option value="ZRS">ZRS — Zone Redundant</option>
+        <option value="GRS">GRS — Geo-Redundant</option>
+      </select>
+      <span class="hint">LRS for single-region; ZRS for zone protection; GRS for cross-region DR</span>
+    </div>
+    <div class="fg"><label>Cloud Cache</label>
+      <select id="cloudCache"><option value="no" selected>No</option><option value="yes">Yes</option></select>
+      <span class="hint">Multi-region profile replication</span>
+    </div>
+  </div>
+
+  <h4>OS Disk</h4>
+  <div class="row r2">
+    <div class="fg"><label>OS Disk Type</label>
+      <select id="osDiskType">
+        <option value="Premium SSD|P10|128|17.92" selected>Premium SSD — P10 (128 GiB) ~$17.92/mo</option>
+        <option value="Premium SSD|P15|256|34.56">Premium SSD — P15 (256 GiB) ~$34.56/mo</option>
+        <option value="Standard SSD|E10|128|9.60">Standard SSD — E10 (128 GiB) ~$9.60/mo</option>
+        <option value="Standard SSD|E15|256|19.20">Standard SSD — E15 (256 GiB) ~$19.20/mo</option>
+        <option value="Standard SSD|E20|512|38.40">Standard SSD — E20 (512 GiB) ~$38.40/mo</option>
+      </select>
+      <span class="hint">Premium SSD recommended. Standard HDD retiring Sep 2028. Ephemeral OS disks are not supported for AVD session hosts.</span>
+    </div>
+    <div class="fg"><label>Custom Golden Image Storage</label>
+      <select id="goldenImage">
+        <option value="yes" selected>Yes — Azure Compute Gallery</option>
+        <option value="no">No</option>
+      </select>
+      <span class="hint">Stores and replicates custom VM images across regions</span>
+    </div>
+  </div>
+
+  <h4>App Delivery</h4>
+  <div class="row r2">
+    <div class="fg"><label>App Attach / MSIX App Attach</label>
+      <select id="appAttach" onchange="document.getElementById('appAttachStorage').parentElement.style.display=this.value==='yes'?'':'none'">
+        <option value="no" selected>No</option>
+        <option value="yes">Yes</option>
+      </select>
+      <span class="hint">Dynamically attaches apps to sessions without installing on the golden image</span>
+    </div>
+    <div class="fg" style="display:none;"><label>App Package Storage (GB)</label>
+      <input type="number" id="appAttachStorage" value="50" min="10" max="1000">
+      <span class="hint">Size depends on the number and size of packaged applications</span>
+    </div>
+  </div>
+</div>
+<div class="nav-row"><button class="btn btn-secondary" onclick="goTab(3)">← Back</button><button class="btn btn-primary" onclick="goTab(5)">Next: Networking →</button></div>
+</div>
+
+<!-- ==================== TAB 5: NETWORKING ==================== -->
+<div class="tab-panel" id="tab5">
+<div class="card">
+  <h3>🌐 Networking</h3>
+  <div class="row r2">
+    <div class="fg"><label>Internet Egress per User (GB/month)</label>
+      <input type="number" id="egressPerUser" value="40" min="5" max="500">
+      <span class="hint">Light=20, Medium=40, Heavy=80, Power=150 GB/mo</span>
+    </div>
+    <div class="fg"><label>Egress Pricing Tier</label>
+      <select id="egressTier">
+        <option value="0.087" selected>Standard (~$0.087/GB after free 100 GB)</option>
+        <option value="0.12">Middle East premium (~$0.12/GB)</option>
+      </select>
+      <span class="hint">Middle East regions may have higher egress rates than standard global pricing</span>
+    </div>
+  </div>
+  <div class="row r3">
+    <div class="fg"><label>Azure Firewall</label>
+      <select id="azFirewall">
+        <option value="no" selected>No</option>
+        <option value="standard">Standard (~$912/mo)</option>
+        <option value="premium">Premium (~$1,368/mo)</option>
+      </select>
+      <span class="hint">Premium adds IDPS and TLS inspection for regulated workloads</span>
+    </div>
+    <div class="fg"><label>Private Endpoints (Storage)</label>
+      <select id="privateEndpoints"><option value="yes" selected>Yes</option><option value="no">No</option></select>
+      <span class="hint">Routes storage traffic over Azure backbone instead of public internet</span>
+    </div>
+    <div class="fg"><label>On-premises Connectivity</label>
+      <select id="onPremConn">
+        <option value="none">None</option>
+        <option value="vpn-gw1">VPN Gateway — VpnGw1 (~$138/mo)</option>
+        <option value="vpn-gw2">VPN Gateway — VpnGw2 (~$361/mo)</option>
+        <option value="expressroute">ExpressRoute</option>
+      </select>
+      <span class="hint">VPN or ExpressRoute for hybrid connectivity to on-prem AD, file servers, or apps</span>
+    </div>
+  </div>
+  <div class="callout info">
+    <strong>📐 Network Requirements (Microsoft Learn)</strong>
+    Round-trip time (RTT) latency from client network to Azure region must be &lt; 150 ms. No inbound port 3389 required — AVD uses reverse connections on TCP 443. RDP Shortpath (UDP) recommended for lower latency.
+    <span class="doc-ref"><a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/prerequisites#network" target="_blank">Source: MS Learn — AVD Prerequisites: Network</a></span>
+  </div>
+</div>
+<div class="nav-row"><button class="btn btn-secondary" onclick="goTab(4)">← Back</button><button class="btn btn-primary" onclick="goTab(6)">Next: BCDR →</button></div>
+</div>
+
+<!-- ==================== TAB 6: BCDR ==================== -->
+<div class="tab-panel" id="tab6">
+<div class="card">
+  <h3>🛡️ Business Continuity &amp; Disaster Recovery</h3>
+  <div class="row r3">
+    <div class="fg"><label>HA Approach</label>
+      <select id="haApproach" onchange="document.getElementById('drRegionRow').style.display=this.value==='single'?'none':''">
+        <option value="single" selected>Single Region</option>
+        <option value="active-passive">Active-Passive Multi-Region</option>
+        <option value="active-active">Active-Active Multi-Region</option>
+      </select>
+      <span class="hint">Single-region uses availability zones; multi-region adds DR failover</span>
+    </div>
+    <div class="fg"><label>RTO Target</label>
+      <select id="rtoTarget">
+        <option value="4">4 hours</option>
+        <option value="8" selected>8 hours</option>
+        <option value="24">24 hours</option>
+        <option value="best-effort">Best-effort</option>
+      </select>
+      <span class="hint">Maximum acceptable downtime before AVD service is restored</span>
+    </div>
+    <div class="fg"><label>RPO Target</label>
+      <select id="rpoTarget">
+        <option value="1">1 hour</option>
+        <option value="4" selected>4 hours</option>
+        <option value="24">24 hours</option>
+        <option value="best-effort">Best-effort</option>
+      </select>
+      <span class="hint">Maximum acceptable data loss window for last recoverable backup</span>
+    </div>
+  </div>
+  <div class="row r3" id="drRegionRow" style="display:none;">
+    <div class="fg"><label>DR Region</label>
+      <select id="drRegion">
+        <option value="West Europe" selected>West Europe</option>
+        <option value="UK South">UK South</option>
+        <option value="North Europe">North Europe</option>
+        <option value="UAE North">UAE North</option>
+        <option value="East US">East US</option>
+      </select>
+      <span class="hint">Choose a paired region for best replication support</span>
+    </div>
+    <div class="fg"><label>Golden Image Replication</label>
+      <select id="imageReplication"><option value="yes" selected>Yes — replicate to DR region</option><option value="no">No</option></select>
+      <span class="hint">Replicate custom VM image to DR region for quick rebuild</span>
+    </div>
+    <div class="fg"><label>Profile Replication</label>
+      <select id="profileReplication"><option value="cloud-cache">FSLogix Cloud Cache</option><option value="grs" selected>GRS Storage</option><option value="none">None</option></select>
+      <span class="hint">Cloud Cache provides active-active sync; GRS provides async geo-replication</span>
+    </div>
+  </div>
+  <div class="row r2">
+    <div class="fg"><label>Backup</label>
+      <select id="backupStrategy">
+        <option value="azure-backup" selected>Azure Backup</option>
+        <option value="third-party">Third-party</option>
+        <option value="none">None (stateless pooled)</option>
+      </select>
+      <span class="hint">Protects profile shares and personal VM disks with scheduled recovery points</span>
+    </div>
+  </div>
+</div>
+<div class="callout info">
+  <strong>📐 BCDR Decision Guide (Microsoft Learn)</strong>
+  <ul>
+    <li><strong>HA Approach:</strong>
+      <ul>
+        <li><strong>Single Region</strong> — Uses Availability Zones within one region. VMs spread across 3 fault-isolated zones. Lowest cost, protects against datacenter-level failures but not region-wide outages.</li>
+        <li><strong>Active-Passive</strong> — Primary region serves all users; a standby environment in a secondary region activates during failover. ~30% additional cost for standby resources. Best for most enterprise scenarios.</li>
+        <li><strong>Active-Active</strong> — Both regions serve users simultaneously. Near-zero downtime but ~80% additional compute cost. Use only for mission-critical workloads requiring &lt;1 hour RTO.</li>
+      </ul>
+    </li>
+    <li><strong>RTO (Recovery Time Objective):</strong>
+      <ul>
+        <li><strong>4 hours</strong> — Mission-critical. Requires pre-provisioned standby VMs and automated failover scripts.</li>
+        <li><strong>8 hours</strong> — Standard enterprise. Allows time to deploy session hosts from golden image in DR region.</li>
+        <li><strong>24 hours</strong> — Non-critical workloads. Manual intervention acceptable; rebuild from scratch in DR region.</li>
+      </ul>
+    </li>
+    <li><strong>RPO (Recovery Point Objective):</strong>
+      <ul>
+        <li><strong>1 hour</strong> — Near-continuous replication. Requires FSLogix Cloud Cache or premium storage with frequent snapshots.</li>
+        <li><strong>4 hours</strong> — Standard. GRS storage replicates asynchronously (~15 min lag) with 4-hour backup intervals.</li>
+        <li><strong>24 hours</strong> — Daily backups. Acceptable for stateless pooled desktops where profiles rebuild quickly.</li>
+      </ul>
+    </li>
+    <li><strong>Profile Replication:</strong>
+      <ul>
+        <li><strong>FSLogix Cloud Cache</strong> — Active-active profile sync to multiple storage targets. Users can failover seamlessly. Higher IOPS consumption and VM memory usage.</li>
+        <li><strong>GRS Storage</strong> — Azure-managed async geo-replication (~15 min RPO). Lower cost but requires manual failover and profiles may be slightly behind.</li>
+      </ul>
+    </li>
+    <li><strong>Backup Strategy:</strong>
+      <ul>
+        <li><strong>Azure Backup</strong> — Native integration. Protects FSLogix file shares (daily snapshots, 30-day retention) and personal VM disks. Supports cross-region restore.</li>
+        <li><strong>None (stateless pooled)</strong> — Valid when all pooled desktops are stateless and profiles are stored externally on replicated storage. No VM-level backup needed.</li>
+      </ul>
+    </li>
+  </ul>
+  <span class="doc-ref"><a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/disaster-recovery" target="_blank">Source: MS Learn — AVD Disaster Recovery</a> | <a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/business-continuity-plan" target="_blank">Business Continuity Plan</a></span>
+</div>
+<div class="nav-row"><button class="btn btn-secondary" onclick="goTab(5)">← Back</button><button class="btn btn-primary" onclick="goTab(7)">Next: Cost →</button></div>
+</div>
+
+<!-- ==================== TAB 7: RESERVED INSTANCE ==================== -->
+<div class="tab-panel" id="tab7">
+<div class="card">
+  <h3>💰 Reserved Instance</h3>
+  <div class="disclaimer"><strong>⚠️ Pricing Disclaimer</strong>Reference prices shown are indicative estimates based on Microsoft published rates as of <strong>May 2026</strong>. Prices are East US baseline — Qatar Central may differ by 5–15%. <strong>Always verify final pricing on the <a href="https://azure.microsoft.com/pricing/calculator/" target="_blank">Azure Pricing Calculator</a></strong> before budgeting.</div>
+  <div class="row r3">
+    <div class="fg"><label>Pricing Model</label>
+      <select id="pricingModel">
+        <option value="payg">Pay-as-you-go</option>
+        <option value="sp1" selected>1-Year Savings Plan (~32% off)</option>
+        <option value="sp3">3-Year Savings Plan (~55% off)</option>
+        <option value="ri1">1-Year Reserved Instance (~36% off)</option>
+        <option value="ri3">3-Year Reserved Instance (~60% off)</option>
+      </select>
+      <span class="hint">Savings Plans offer flexibility across VM families; RIs lock a specific SKU for deeper discounts</span>
+    </div>
+    <div class="fg"><label>Azure Hybrid Benefit</label>
+      <select id="ahb"><option value="no" selected>No</option><option value="yes">Yes (Windows Server hosts)</option></select>
+      <span class="hint">Apply existing Windows Server licenses to reduce compute costs by up to 40%</span>
+    </div>
+    <div class="fg"><label>Dev/Test Subscription</label>
+      <select id="devTest"><option value="no" selected>No — Production</option><option value="yes">Yes — Dev/Test pricing</option></select>
+      <span class="hint">Dev/Test subscriptions offer reduced rates — not for production workloads</span>
+    </div>
+  </div>
+  <div class="row r2">
+    <div class="fg"><label>Runtime Model</label>
+      <select id="runtimeModel" onchange="document.getElementById('customHoursRow').style.display=this.value==='custom'?'':'none'">
+        <option value="24x7">24/7 (always on)</option>
+        <option value="business" selected>Business Hours Only (auto-scale)</option>
+        <option value="custom">Custom Hours</option>
+      </select>
+      <span class="hint">Business-hours mode uses autoscale to deallocate VMs off-peak, reducing costs</span>
+    </div>
+    <div class="fg" id="customHoursRow" style="display:none;">
+      <label>Custom Runtime Hours/Month</label>
+      <input type="number" id="customHours" value="220" min="100" max="744">
+      <span class="hint">Total VM runtime hours per month (744 = 24×7); adjust for your schedule</span>
+    </div>
+  </div>
+</div>
+<div class="nav-row"><button class="btn btn-secondary" onclick="goTab(6)">← Back</button><button class="btn btn-green" onclick="calculate();goTab(8)">📊 Calculate &amp; View ACR →</button></div>
+</div>
+
+<!-- ==================== TAB 8: ACR ESTIMATION ==================== -->
+<div class="tab-panel" id="tab8">
+<div class="card">
+  <h3>💰 Azure Consumption Revenue (ACR) Estimation</h3>
+  <p style="font-size:12px;color:var(--gray);margin-bottom:16px;">Estimated ACR generated from Azure infrastructure resources required for this AVD deployment. This consolidates all compute, storage, networking, identity, and management costs into a single revenue view.</p>
+  <div id="acrArea"><!-- Populated by calculate() --></div>
+  <div class="disclaimer" style="margin-top:16px;">
+    <strong>⚠️ Disclaimer:</strong> These figures are tentative estimates based on publicly available Azure list prices as of May 2026. Actual costs may vary depending on region, negotiated EA/CSP pricing, consumption patterns, and discounts. Please verify all pricing using the <a href="https://azure.microsoft.com/pricing/calculator/" target="_blank" style="color:var(--accent);font-weight:600;">Azure Pricing Calculator</a> for accurate quotations.
+  </div>
+</div>
+<div class="nav-row"><button class="btn btn-secondary" onclick="goTab(7)">← Back</button><button class="btn btn-primary" onclick="goTab(9)">View Full Results →</button></div>
+</div>
+
+<!-- ==================== TAB 9: RESULTS ==================== -->
+<div class="tab-panel" id="tab9">
+<div class="card" style="background:var(--dk-blue);color:#fff;border:none;margin-bottom:20px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h3 style="color:#fff;border:none;margin:0;padding:0;font-size:18px;">📋 AVD Solution Sizing — Final Report</h3>
+      <p style="font-size:12px;opacity:.7;margin-top:4px;">Complete infrastructure sizing output from this exercise. Download as PDF or Excel for stakeholder review.</p>
+    </div>
+    <div style="display:flex;gap:8px;" class="no-print">
+      <button class="btn" onclick="exportPDF()" style="background:#fff;color:var(--dk-blue);font-size:13px;padding:10px 20px;">📄 Export PDF</button>
+      <button class="btn" onclick="exportExcel()" style="background:var(--green);color:#fff;font-size:13px;padding:10px 20px;">📊 Export Excel</button>
+    </div>
+  </div>
+</div>
+<div id="resultsArea"><!-- Populated by JS --></div>
+<div class="nav-row no-print"><button class="btn btn-secondary" onclick="goTab(8)">← Back to ACR</button>
+<div style="display:flex;gap:8px;"><button class="btn btn-primary" onclick="exportPDF()">📄 Export PDF</button><button class="btn btn-green" onclick="exportExcel()">📊 Export Excel</button></div></div>
+</div>
+
+</div><!-- tabs-container -->
+
+<!-- PERSISTENT SITE FOOTER -->
+<div class="site-footer">
+  <div class="sf-brand">
+    <svg xmlns="http://www.w3.org/2000/svg" width="90" height="20" viewBox="0 0 493 107">
+      <rect x="1" y="1" width="49" height="49" fill="#f25022"/>
+      <rect x="52" y="1" width="49" height="49" fill="#7fba00"/>
+      <rect x="1" y="52" width="49" height="49" fill="#00a4ef"/>
+      <rect x="52" y="52" width="49" height="49" fill="#ffb900"/>
+      <text x="120" y="76" fill="#ffffff" font-family="Segoe UI,sans-serif" font-size="82" font-weight="600" letter-spacing="-1">Microsoft</text>
+    </svg>
+  </div>
+  <div class="sf-content">
+    Azure Virtual Desktop — Enterprise Solution Sizer
+    <div class="sf-divider"></div>
+    <div class="sf-developer">
+      <strong>Solution developed by:</strong> Zahir Hussain Shah · Sr. Solution Engineer, Cloud &amp; AI – Infra · <a href="mailto:zashah@microsoft.com">zashah@microsoft.com</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// GLOBAL STATE & CONSTANTS
+// ============================================================
+const PCOLORS = [
+  {bg:'#E3F2FD',fg:'#1565C0'},{bg:'#F3E5F5',fg:'#7B1FA2'},{bg:'#E8F5E9',fg:'#2E7D32'},
+  {bg:'#FFF3E0',fg:'#E65100'},{bg:'#FCE4EC',fg:'#C62828'},{bg:'#E0F7FA',fg:'#006064'},
+  {bg:'#F9FBE7',fg:'#827717'},{bg:'#EFEBE9',fg:'#4E342E'}
+];
+const UPV = {light:6,medium:4,heavy:2,power:1};
+const PERSONAL_VM = {
+  light:{sku:'D2s_v5',vcpu:2,ram:8,payg:62.78},
+  medium:{sku:'D4s_v5',vcpu:4,ram:16,payg:125.56},
+  heavy:{sku:'D8s_v5',vcpu:8,ram:32,payg:251.12},
+  power:{sku:'NV16as_v4',vcpu:16,ram:56,payg:877.72}
+};
+const VM_CATALOG = [
+  {sku:'D4s_v5',vcpu:4,ram:16,payg:125.56},
+  {sku:'D8s_v5',vcpu:8,ram:32,payg:251.12},
+  {sku:'D16s_v5',vcpu:16,ram:64,payg:502.24},
+  {sku:'D4as_v5',vcpu:4,ram:16,payg:125.56},
+  {sku:'D8as_v5',vcpu:8,ram:32,payg:251.12},
+  {sku:'D16as_v5',vcpu:16,ram:64,payg:502.24},
+  {sku:'F8s_v2',vcpu:8,ram:16,payg:246.74},
+  {sku:'F16s_v2',vcpu:16,ram:32,payg:493.48},
+  {sku:'D8s_v4',vcpu:8,ram:32,payg:251.12},
+  {sku:'D16s_v4',vcpu:16,ram:64,payg:502.24},
+  {sku:'D16ds_v5',vcpu:16,ram:64,payg:528.96},
+  {sku:'NV16as_v4',vcpu:16,ram:56,payg:877.72}
+];
+const DISCOUNT = {payg:1,sp1:.68,sp3:.45,ri1:.64,ri3:.40};
+const METADATA_REGIONS = ['Australia East','Canada Central','Canada East','Central India','Central US','East US','East US 2','Japan East','Japan West','North Central US','North Europe','South Africa North','South Central US','UK South','UK West','West Central US','West Europe','West US','West US 2','West US 3'];
+
+let personaCounter = 1;
+let currentTab = 0;
+
+// Init date
+document.getElementById('reportDate').valueAsDate = new Date();
+
+// ============================================================
+// TAB NAVIGATION
+// ============================================================
+function goTab(n) {
+  // mark visited
+  const steps = document.querySelectorAll('.step');
+  for (let i = 0; i < currentTab; i++) steps[i].classList.add('done');
+  
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  steps.forEach(s => s.classList.remove('active'));
+  document.getElementById('tab'+n).classList.add('active');
+  steps[n].classList.add('active');
+  currentTab = n;
+  window.scrollTo(0,0);
+
+  // auto-generate host pool cards when entering tab 2
+  if (n === 2) buildHostPoolCards();
+  // auto-calculate when entering ACR or results
+  if (n === 8 || n === 9) calculate();
+}
+
+// ============================================================
+// TOGGLE BUTTONS
+// ============================================================
+function setToggle(btn) {
+  btn.parentElement.querySelectorAll('.tog').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  if (btn.parentElement.id === 'dataResidency') onResidencyChange();
+}
+function getToggleVal(id) {
+  const active = document.getElementById(id).querySelector('.tog.on');
+  return active ? active.dataset.val : '';
+}
+
+// ============================================================
+// REGION ADVISORIES
+// ============================================================
+function onRegionChange() {
+  const r = document.getElementById('azureRegion').value;
+  const adv = document.getElementById('regionAdvisory');
+  if (!METADATA_REGIONS.includes(r)) {
+    // suggest nearest metadata region
+    let suggested = 'West Europe';
+    if (r === 'UAE North') suggested = 'West Europe';
+    if (r === 'Qatar Central') suggested = 'West Europe';
+    document.getElementById('metadataRegion').value = suggested;
+    adv.innerHTML = `<div class="callout warn"><strong>⚠️ Metadata Region Advisory</strong>Azure Virtual Desktop host pool metadata <strong>cannot be stored in ${esc(r)}</strong>. This region is not in the AVD metadata region list. Metadata will be stored in <strong>${esc(suggested)}</strong>. Session hosts will run in ${esc(r)}.<br><span class="doc-ref"><a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/prerequisites#azure-regions" target="_blank">Source: MS Learn — AVD Prerequisites: Azure regions</a></span></div>`;
+  } else {
+    document.getElementById('metadataRegion').value = r;
+    adv.innerHTML = '';
+  }
+}
+function onResidencyChange() {
+  const gov = getToggleVal('dataResidency') === 'government';
+  document.getElementById('govAdvisory').innerHTML = gov ? `<div class="callout warn"><strong>⚠️ Government / Regulated Environment</strong>Host pool metadata is stored in the metadata region (see above). Ensure metadata region meets your data residency and sovereignty requirements. Consider consulting your compliance team regarding data at rest/in transit encryption, conditional access, and network isolation requirements.</div>` : '';
+}
+function onExternalChange() {}
+function onIdentityChange() {
+  const m = document.getElementById('identityModel').value;
+  const jt = document.getElementById('joinType');
+  jt.innerHTML = '';
+  if (m === 'entra-only') {
+    jt.innerHTML = '<option value="Microsoft Entra Joined" selected>Microsoft Entra Joined</option>';
+  } else if (m === 'entra-adds') {
+    jt.innerHTML = '<option value="Hybrid Joined (AD DS)" selected>Hybrid Joined (AD DS)</option><option value="AD DS Domain-Joined">AD DS Domain-Joined</option><option value="Microsoft Entra Joined">Microsoft Entra Joined</option>';
+  } else {
+    jt.innerHTML = '<option value="Entra Domain Services Joined" selected>Entra Domain Services Joined</option><option value="Microsoft Entra Joined">Microsoft Entra Joined</option>';
+  }
+}
+
+// Init
+onRegionChange();
+
+// ============================================================
+// PERSONA MANAGEMENT
+// ============================================================
+function addPersona() {
+  personaCounter++;
+  const c = PCOLORS[(personaCounter-1) % PCOLORS.length];
+  const div = document.createElement('div');
+  div.className = 'persona-card';
+  div.dataset.idx = personaCounter - 1;
+  div.innerHTML = `
+    <button class="rm-btn no-print" onclick="removePersona(this)" title="Remove">✕</button>
+    <div class="p-header"><span class="p-tag" style="background:${c.bg};color:${c.fg};">Persona ${personaCounter}</span><strong class="p-title">New Persona</strong></div>
+    <div class="row r2">
+      <div class="fg"><label>Persona Name</label><input type="text" class="pName" value="" placeholder="e.g. Developers" oninput="this.closest('.persona-card').querySelector('.p-title').textContent=this.value||'Untitled'"><span class="hint">Descriptive name for this user group (e.g. Finance Team, Call Center Agents)</span></div>
+      <div class="fg"><label>User Type</label><select class="pType"><option value="internal" selected>Internal</option><option value="external">External</option></select><span class="hint">Internal users are covered by M365 licenses; external users need per-user pricing</span></div>
+    </div>
+    <div class="row r3">
+      <div class="fg"><label>Total Users</label><input type="number" class="pUsers" value="50" min="1" max="50000"><span class="hint">Total users in this persona, including those not online simultaneously</span></div>
+      <div class="fg"><label>Concurrency %</label><input type="number" class="pConc" value="80" min="10" max="100"><span class="hint">% of users online simultaneously at peak</span></div>
+      <div class="fg"><label>Workload Type</label><select class="pWorkload"><option value="light">Light — 6 users/vCPU</option><option value="medium" selected>Medium — 4 users/vCPU</option><option value="heavy">Heavy — 2 users/vCPU</option><option value="power">Power — 1 user/vCPU</option></select><span class="hint">Workload intensity determines users-per-vCPU ratio per MS VM sizing guidelines</span></div>
+    </div>
+    <div class="row r3">
+      <div class="fg"><label>Work Hours/Day</label><input type="number" class="pHours" value="8" min="1" max="24"><span class="hint">Average active hours per day; used for runtime cost estimation</span></div>
+      <div class="fg"><label>Work Days/Week</label><input type="number" class="pDays" value="5" min="1" max="7"><span class="hint">Working days per week; affects monthly runtime hours and costs</span></div>
+      <div class="fg"><label>Peak Logon Window (min)</label><input type="number" class="pPeakLogon" value="30" min="5" max="120"><span class="hint">Duration of morning logon storm</span></div>
+    </div>
+    <h4>Typical Applications</h4>
+    <div style="display:flex;flex-wrap:wrap;gap:16px;">
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--dk-blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Productivity</div>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Microsoft 365 (Office)" checked>Microsoft 365 (Office)</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Microsoft Teams" checked>Microsoft Teams</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Outlook / Exchange" checked>Outlook / Exchange</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="OneDrive / SharePoint">OneDrive / SharePoint</label>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--dk-blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Browsers & Web</div>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Microsoft Edge" checked>Microsoft Edge</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Google Chrome">Google Chrome</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Web-based LOB Apps">Web-based LOB Apps</label>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--dk-blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Development</div>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Visual Studio 2022">Visual Studio 2022</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="VS Code">VS Code</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="SQL Server Mgmt Studio">SQL Server Mgmt Studio</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Git / Azure DevOps">Git / Azure DevOps</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Docker / Containers">Docker / Containers</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="PowerShell / CLI Tools">PowerShell / CLI Tools</label>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--dk-blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Business / LOB</div>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="ERP / CRM (SAP, Dynamics)">ERP / CRM (SAP, Dynamics)</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Accounting / Finance">Accounting / Finance</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Data Analysis (Power BI, Excel)">Data Analysis (Power BI, Excel)</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Custom LOB Application">Custom LOB Application</label>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--dk-blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Creative / Engineering</div>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="CAD / 3D (AutoCAD, Revit)">CAD / 3D (AutoCAD, Revit)</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="Video / Media Editing">Video / Media Editing</label>
+        <label class="cb-group"><input type="checkbox" class="pApp" value="GIS / Mapping">GIS / Mapping</label>
+      </div>
+    </div>`;
+  document.getElementById('personasContainer').appendChild(div);
+}
+function removePersona(btn) {
+  const cards = document.querySelectorAll('.persona-card');
+  if (cards.length <= 1) { alert('At least one persona is required.'); return; }
+  btn.closest('.persona-card').remove();
+}
+
+function getPersonas() {
+  const ps = [];
+  document.querySelectorAll('.persona-card').forEach((card, i) => {
+    const p = {};
+    p.index = i + 1;
+    p.name = card.querySelector('.pName').value || `Persona ${i+1}`;
+    p.type = card.querySelector('.pType').value;
+    p.users = parseInt(card.querySelector('.pUsers').value) || 0;
+    p.conc = parseInt(card.querySelector('.pConc').value) || 80;
+    p.concurrentUsers = Math.ceil(p.users * p.conc / 100);
+    p.workload = card.querySelector('.pWorkload').value;
+    p.hoursDay = parseInt(card.querySelector('.pHours').value) || 8;
+    p.daysWeek = parseInt(card.querySelector('.pDays').value) || 5;
+    p.peakLogon = parseInt(card.querySelector('.pPeakLogon').value) || 30;
+    p.apps = [];
+    card.querySelectorAll('.pApp:checked').forEach(cb => p.apps.push(cb.value));
+    ps.push(p);
+  });
+  return ps;
+}
+
+// ============================================================
+// HOST POOL CARD GENERATION (Tab 2 → Tab 3)
+// ============================================================
+function buildHostPoolCards() {
+  const personas = getPersonas();
+  const container = document.getElementById('hostPoolContainer');
+  container.innerHTML = '';
+  personas.forEach((p, i) => {
+    const c = PCOLORS[i % PCOLORS.length];
+    // default VM recommendation based on workload
+    const recVm = p.workload === 'power' ? 'D16ds_v5' : 'D8s_v5';
+    const vmOpts = VM_CATALOG.map(v => `<option value="${v.sku}|${v.vcpu}|${v.ram}|${v.payg}" ${v.sku===recVm?'selected':''}>${v.sku} (${v.vcpu} vCPU, ${v.ram} GB) ~$${v.payg.toFixed(0)}/mo</option>`).join('');
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <h3><span class="p-tag" style="background:${c.bg};color:${c.fg};">Persona ${p.index}</span>${esc(p.name)} — ${p.concurrentUsers} concurrent users</h3>
+      <div class="row r2">
+        <div class="fg"><label>Host Pool Type</label>
+          <select class="hpType" onchange="hpTypeChange(this)">
+            <option value="pooled" ${p.workload!=='power'?'selected':''}>Pooled (Multi-Session)</option>
+            <option value="personal" ${p.workload==='power'?'selected':''}>Personal (Single-Session)</option>
+            <option value="both">Both Pooled + Personal</option>
+          </select>
+          <span class="hint">Pooled shares VMs across users; Personal assigns one VM per user</span>
+        </div>
+        <div class="fg"><label>Application Group Type</label>
+          <select class="hpAppGroup">
+            <option value="desktop" selected>Full Desktop</option>
+            <option value="remoteapp">RemoteApp (Published Apps)</option>
+            <option value="both">Desktop + RemoteApp (separate user groups)</option>
+          </select>
+          <span class="hint">RemoteApp is pooled-only. "Desktop + RemoteApp" assigns different users to each type on the same host pool</span>
+        </div>
+      </div>
+      <div class="row r2">
+        <div class="fg"><label>N+1 Redundancy</label>
+          <select class="hpRedundancy"><option value="1" selected>Yes (+1 VM per pool)</option><option value="0">No</option></select>
+          <span class="hint">Adds one extra VM per pool for failover or maintenance</span>
+        </div>
+        <div class="fg"><label>Published Apps (if RemoteApp)</label>
+          <input type="text" class="hpPublishedApps" placeholder="e.g. SAP, Power BI, AutoCAD" value="">
+          <span class="hint">List specific apps to publish via RemoteApp; leave blank if Full Desktop only</span>
+        </div>
+      </div>
+      <!-- Pooled config -->
+      <div class="hp-pooled">
+        <h4>Pooled Configuration (Multi-Session)</h4>
+        <div class="row r3">
+          <div class="fg"><label>VM SKU</label><select class="hpVmSku">${vmOpts}</select><span class="hint">4\u201324 vCPUs recommended for multi-session per MS best practice</span></div>
+          <div class="fg"><label>Operating System</label><select class="hpOS"><option value="Windows 11 Enterprise Multi-Session" selected>Win 11 Enterprise Multi-Session</option><option value="Windows 10 Enterprise Multi-Session">Win 10 Enterprise Multi-Session</option><option value="Windows Server 2025">Windows Server 2025</option><option value="Windows Server 2022">Windows Server 2022</option></select><span class="hint">Multi-session requires Win 10/11 Multi-Session or Windows Server with RDS CALs</span></div>
+          <div class="fg"><label>Load Balancing</label><select class="hpLB"><option value="Breadth-first" selected>Breadth-first (recommended)</option><option value="Depth-first">Depth-first</option></select><span class="hint">Breadth-first spreads users evenly; Depth-first fills one VM first</span></div>
+        </div>
+      </div>
+      <!-- Personal config -->
+      <div class="hp-personal" style="${p.workload==='power'?'':'display:none;'}">
+        <h4>Personal Configuration (Single-Session)</h4>
+        <div class="row r3">
+          <div class="fg"><label>VM SKU (auto)</label><input type="text" class="hpPersonalVm" value="${PERSONAL_VM[p.workload].sku} (${PERSONAL_VM[p.workload].vcpu} vCPU, ${PERSONAL_VM[p.workload].ram} GB)" readonly style="background:#F5F5F5;"></div>
+          <div class="fg"><label>POC Subset Users</label><input type="number" class="hpPocSubset" value="${Math.min(p.concurrentUsers, 15)}" min="1" max="${p.users}"><span class="hint">Number of personal VMs for POC/Pilot</span></div>
+          <div class="fg"><label>Start VM on Connect</label><select class="hpSvoc"><option value="yes" selected>Yes</option><option value="no">No</option></select><span class="hint">Auto-starts a deallocated personal VM when the user connects</span></div>
+        </div>
+      </div>
+      <!-- Autoscale -->
+      <h4>Autoscale Configuration</h4>
+      <div class="row r4">
+        <div class="fg"><label>Autoscale</label><select class="hpAutoscale"><option value="yes" selected>Enabled</option><option value="no">Disabled</option></select><span class="hint">Auto start/stop VMs based on demand and schedule</span></div>
+        <div class="fg"><label>Business Start</label><input type="text" class="hpBizStart" value="07:00"><span class="hint">Peak autoscale ramp-up time (24h format)</span></div>
+        <div class="fg"><label>Business End</label><input type="text" class="hpBizEnd" value="19:00"><span class="hint">Off-peak phase begins; idle VMs drain and deallocate</span></div>
+        <div class="fg"><label>Min % Hosts Off-Peak</label><input type="number" class="hpMinPct" value="10" min="0" max="100"><span class="hint">Minimum % of host VMs kept running for early arrivals</span></div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function hpTypeChange(sel) {
+  const card = sel.closest('.card');
+  const pooled = card.querySelector('.hp-pooled');
+  const personal = card.querySelector('.hp-personal');
+  const v = sel.value;
+  pooled.style.display = (v === 'pooled' || v === 'both') ? '' : 'none';
+  personal.style.display = (v === 'personal' || v === 'both') ? '' : 'none';
+  // RemoteApp is only available for pooled host pools (MS Learn)
+  const appGroupSel = card.querySelector('.hpAppGroup');
+  if (appGroupSel) {
+    if (v === 'personal') {
+      appGroupSel.value = 'desktop';
+      appGroupSel.disabled = true;
+      appGroupSel.title = 'RemoteApp is only available for pooled host pools';
+    } else {
+      appGroupSel.disabled = false;
+      appGroupSel.title = '';
+    }
+  }
+}
+
+// ============================================================
+// MAIN CALCULATION ENGINE
+// ============================================================
+function calculate() {
+  const personas = getPersonas();
+  const deployPurpose = getToggleVal('deployPurpose');
+  const region = document.getElementById('azureRegion').value;
+  const metaRegion = document.getElementById('metadataRegion').value;
+  const profileGB = parseInt(document.getElementById('profileSizeGB').value) || 30;
+  const pricingModel = document.getElementById('pricingModel').value;
+  const discountFactor = DISCOUNT[pricingModel] || 1;
+  const runtimeModel = document.getElementById('runtimeModel').value;
+  const identityModel = document.getElementById('identityModel').value;
+  const joinType = document.getElementById('joinType').value;
+  const storageBackend = document.getElementById('storageBackend').value;
+  const storageRedundancy = document.getElementById('storageRedundancy').value;
+  const osDiskParts = document.getElementById('osDiskType').value.split('|');
+  const osDiskName = osDiskParts[0] + ' ' + osDiskParts[1];
+  const osDiskSize = parseInt(osDiskParts[2]);
+  const osDiskCost = parseFloat(osDiskParts[3]);
+  const egressPerUser = parseInt(document.getElementById('egressPerUser').value) || 40;
+  const egressRate = parseFloat(document.getElementById('egressTier').value) || 0.087;
+  const haApproach = document.getElementById('haApproach').value;
+  const internalLicense = document.getElementById('internalLicense').value;
+  const externalPricing = document.getElementById('externalPricing').value;
+  const projectName = document.getElementById('projectName').value || 'AVD Solution Sizing';
+  const customerName = document.getElementById('customerName').value || 'Customer';
+  const preparedBy = document.getElementById('preparedBy').value || '';
+  const reportDate = document.getElementById('reportDate').value || new Date().toISOString().split('T')[0];
+
+  // Runtime hours/month
+  let runtimeHours = 744; // 24x7
+  if (runtimeModel === 'business') {
+    // Use persona average hours: hoursDay * daysWeek * 4.33 + 2hr ramp buffer
+    const avgHrs = personas.reduce((s, p) => s + (p.hoursDay + 2) * p.daysWeek, 0) / personas.length;
+    runtimeHours = Math.round(avgHrs * 4.33);
+  } else if (runtimeModel === 'custom') {
+    runtimeHours = parseInt(document.getElementById('customHours').value) || 220;
+  }
+
+  // Read host pool configs
+  const hpCards = document.querySelectorAll('#hostPoolContainer .card');
+
+  const results = [];
+  let grandVMs = 0, grandVcpu = 0, grandRam = 0, grandUsers = 0, grandPools = 0;
+  let grandComputeCost = 0, grandStorageCost = 0;
+
+  personas.forEach((p, i) => {
+    const card = hpCards[i];
+    if (!card) return;
+    const r = {persona: p, pools: []};
+    const hpType = card.querySelector('.hpType').value;
+    const redundancy = parseInt(card.querySelector('.hpRedundancy').value);
+    const appGroup = card.querySelector('.hpAppGroup')?.value || 'desktop';
+    const publishedApps = card.querySelector('.hpPublishedApps')?.value || '';
+    const appGroupLabel = appGroup === 'desktop' ? 'Full Desktop' : appGroup === 'remoteapp' ? 'RemoteApp' : 'Desktop + RemoteApp (separate user groups)';
+
+    // POOLED
+    if (hpType === 'pooled' || hpType === 'both') {
+      const vmParts = card.querySelector('.hpVmSku').value.split('|');
+      const vmSku = vmParts[0], vcpu = parseInt(vmParts[1]), ram = parseInt(vmParts[2]), payg = parseFloat(vmParts[3]);
+      const os = card.querySelector('.hpOS').value;
+      const lb = card.querySelector('.hpLB').value;
+      const upv = UPV[p.workload];
+      const usersPerVm = vcpu * upv;
+      const vmCount = Math.ceil(p.concurrentUsers / usersPerVm) + redundancy;
+      const totalVcpu = vmCount * vcpu;
+      const totalRam = vmCount * ram;
+      const monthlyCost = vmCount * payg * discountFactor * (runtimeHours / 744);
+      const osDiskTotal = vmCount * osDiskCost;
+
+      r.pools.push({
+        type: 'Pooled', subtype: 'Multi-Session', vmSku, vcpu, ram, vmCount, totalVcpu, totalRam,
+        usersPerVm, upv, os, lb, redundancy, monthlyCost, osDiskTotal,
+        concurrentUsers: p.concurrentUsers, appGroup: appGroupLabel, publishedApps
+      });
+      grandVMs += vmCount; grandVcpu += totalVcpu; grandRam += totalRam; grandPools++;
+      grandComputeCost += monthlyCost;
+      grandStorageCost += osDiskTotal;
+    }
+
+    // PERSONAL
+    if (hpType === 'personal' || hpType === 'both') {
+      const pvm = PERSONAL_VM[p.workload];
+      const isPoc = deployPurpose === 'poc' || deployPurpose === 'pilot';
+      const pocSubset = parseInt(card.querySelector('.hpPocSubset')?.value) || 15;
+      const vmCount = isPoc ? pocSubset : p.concurrentUsers;
+      const totalVcpu = vmCount * pvm.vcpu;
+      const totalRam = vmCount * pvm.ram;
+      const monthlyCost = vmCount * pvm.payg * discountFactor * (runtimeHours / 744);
+      const osDiskTotal = vmCount * osDiskCost;
+
+      r.pools.push({
+        type: 'Personal', subtype: 'Single-Session', vmSku: pvm.sku, vcpu: pvm.vcpu, ram: pvm.ram,
+        vmCount, totalVcpu, totalRam, usersPerVm: 1, upv: 1, os: 'Windows 11 Enterprise',
+        lb: 'Direct', redundancy: 0, monthlyCost, osDiskTotal,
+        concurrentUsers: vmCount, isPoc, pocSubset, fullCount: p.concurrentUsers,
+        appGroup: appGroupLabel, publishedApps
+      });
+      grandVMs += vmCount; grandVcpu += totalVcpu; grandRam += totalRam; grandPools++;
+      grandComputeCost += monthlyCost;
+      grandStorageCost += osDiskTotal;
+    }
+
+    grandUsers += p.users;
+    results.push(r);
+  });
+
+  // STORAGE calculations
+  const totalProfileGB = grandUsers * profileGB;
+  const profileIOPS = 400 + totalProfileGB;
+  const profileStorageCost = storageBackend === 'azure-files-premium' ?
+    (totalProfileGB * 0.16) : // ~$0.16/GiB/mo for premium files
+    (totalProfileGB * 0.06);  // ~$0.06/GiB/mo for standard
+  grandStorageCost += profileStorageCost;
+
+  // NETWORKING calculations
+  const totalEgressGB = grandUsers * egressPerUser;
+  const freeEgressGB = 100;
+  const billableEgress = Math.max(0, totalEgressGB - freeEgressGB);
+  const egressCost = billableEgress * egressRate;
+  let firewallCost = 0;
+  const fw = document.getElementById('azFirewall').value;
+  if (fw === 'standard') firewallCost = 912;
+  if (fw === 'premium') firewallCost = 1368;
+  let vpnCost = 0;
+  const vpn = document.getElementById('onPremConn').value;
+  if (vpn === 'vpn-gw1') vpnCost = 138;
+  if (vpn === 'vpn-gw2') vpnCost = 361;
+  const networkCost = egressCost + firewallCost + vpnCost;
+
+  // IDENTITY infrastructure cost
+  let identityCost = 0;
+  let identityComponents = [];
+  if (identityModel === 'entra-adds') {
+    identityComponents.push({name: 'Domain Controller VM 1', spec: 'D2s_v5 (2 vCPU, 8 GB)', cost: 62.78 * discountFactor});
+    identityComponents.push({name: 'Domain Controller VM 2 (HA)', spec: 'D2s_v5 (2 vCPU, 8 GB)', cost: 62.78 * discountFactor});
+    identityComponents.push({name: 'Microsoft Entra Connect', spec: 'Included / VM-hosted', cost: 0});
+    identityCost = 2 * 62.78 * discountFactor;
+  } else if (identityModel === 'entra-aadds') {
+    identityComponents.push({name: 'Microsoft Entra Domain Services', spec: 'Standard tier', cost: 109.50});
+    identityCost = 109.50;
+  } else {
+    identityComponents.push({name: 'Microsoft Entra ID', spec: 'Included with M365', cost: 0});
+  }
+
+  // LICENSING cost
+  let licenseCost = 0;
+  const extUsers = personas.filter(p => p.type === 'external').reduce((s, p) => s + p.users, 0);
+  if (externalPricing === 'full') licenseCost = extUsers * 10;
+  if (externalPricing === 'apps') licenseCost = extUsers * 5.50;
+
+  // DR additional cost
+  let drCost = 0;
+  if (haApproach === 'active-passive') drCost = grandComputeCost * 0.3; // ~30% for standby
+  if (haApproach === 'active-active') drCost = grandComputeCost * 0.8; // ~80% for active
+
+  // Monitoring estimate
+  const monitoringCost = grandVMs * 5; // ~$5/VM/mo for Log Analytics
+
+  // GRAND TOTAL
+  const totalMonthlyCost = grandComputeCost + grandStorageCost + networkCost + identityCost + licenseCost + drCost + monitoringCost;
+  const perUserCost = grandUsers > 0 ? totalMonthlyCost / grandUsers : 0;
+
+  // Subnet sizing
+  const subnetIPs = grandVMs + 10; // VMs + 5 Azure reserved + buffer
+  let subnetSize = '/24'; // 251 usable
+  if (subnetIPs > 251) subnetSize = '/23';
+  if (subnetIPs > 507) subnetSize = '/22';
+  if (subnetIPs <= 59) subnetSize = '/26';
+  if (subnetIPs <= 27) subnetSize = '/27';
+
+  // Cost comparison
+  const compareModels = ['payg','sp1','sp3','ri1','ri3'];
+  const compareLabels = ['Pay-as-you-go','1-Year Savings Plan','3-Year Savings Plan','1-Year Reserved Instance','3-Year Reserved Instance'];
+  const compareSavings = ['0%','~32%','~55%','~36%','~60%'];
+
+  // ============================================================
+  // POPULATE ACR ESTIMATION (Tab 8)
+  // ============================================================
+  const acrItems = [
+    {category: 'Compute', description: `${grandVMs} Session Host VMs (${results.map(r => r.vmCount + '× ' + r.vmSku).join(', ')})`, monthly: grandComputeCost},
+    {category: 'OS Disks', description: `${grandVMs} managed disks for session hosts`, monthly: grandStorageCost - profileStorageCost},
+    {category: 'FSLogix Profile Storage', description: `${(totalProfileGB/1024).toFixed(1)} TB on ${storageBackend.replace(/-/g,' ')}`, monthly: profileStorageCost},
+    {category: 'Networking — Egress', description: `${totalEgressGB.toFixed(0)} GB egress (${billableEgress.toFixed(0)} GB billable)`, monthly: egressCost},
+    {category: 'Networking — Firewall', description: fw === 'none' ? 'Not configured' : `Azure Firewall ${fw}`, monthly: firewallCost},
+    {category: 'Networking — VPN Gateway', description: vpn === 'none' ? 'Not configured' : vpn.replace(/-/g,' ').toUpperCase(), monthly: vpnCost},
+    {category: 'Identity Infrastructure', description: identityModel.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()), monthly: identityCost},
+    {category: 'External User Licensing', description: extUsers > 0 ? `${extUsers} users × ${externalPricing === 'full' ? '$10' : externalPricing === 'apps' ? '$5.50' : '$0'}` : 'No external users', monthly: licenseCost},
+    {category: 'BCDR / DR Standby', description: haApproach === 'none' ? 'Not configured' : haApproach.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()), monthly: drCost},
+    {category: 'Monitoring & Log Analytics', description: `${grandVMs} VMs × ~$5/VM/mo`, monthly: monitoringCost}
+  ];
+
+  const totalAnnualACR = totalMonthlyCost * 12;
+
+  let acrHtml = `<div class="metric-grid" style="margin-bottom:20px;">
+    <div class="m-box"><span class="num">$${fmt(totalMonthlyCost)}</span><span class="lbl">Monthly ACR</span></div>
+    <div class="m-box"><span class="num">$${fmt(totalAnnualACR)}</span><span class="lbl">Annual ACR (12 mo)</span></div>
+    <div class="m-box"><span class="num">$${fmt(perUserCost)}</span><span class="lbl">ACR per User / Month</span></div>
+    <div class="m-box"><span class="num">${grandUsers}</span><span class="lbl">Total Users</span></div>
+  </div>`;
+
+  acrHtml += `<table><tr><th>Category</th><th>Description</th><th style="text-align:right;">Monthly Cost (USD)</th><th style="text-align:right;">Annual Cost (USD)</th></tr>`;
+  acrItems.forEach(item => {
+    acrHtml += `<tr><td>${item.category}</td><td>${item.description}</td><td style="text-align:right;">$${fmt(item.monthly)}</td><td style="text-align:right;">$${fmt(item.monthly * 12)}</td></tr>`;
+  });
+  acrHtml += `<tr class="total-row"><td colspan="2"><strong>TOTAL ESTIMATED ACR</strong></td><td style="text-align:right;"><strong>$${fmt(totalMonthlyCost)}</strong></td><td style="text-align:right;"><strong>$${fmt(totalAnnualACR)}</strong></td></tr>`;
+  acrHtml += `</table>`;
+
+  // Commitment model comparison
+  acrHtml += `<h4 style="margin-top:20px;">ACR by Commitment Model</h4>`;
+  acrHtml += `<table><tr><th>Pricing Model</th><th>Typical Savings</th><th style="text-align:right;">Est. Monthly ACR</th><th style="text-align:right;">Est. Annual ACR</th></tr>`;
+  compareModels.forEach((m, i) => {
+    const df = 1 - (DISCOUNT[m] || 0);
+    const computeAtModel = grandComputeCost / discountFactor * df;
+    const totalAtModel = computeAtModel + grandStorageCost + networkCost + identityCost + licenseCost + drCost / discountFactor * df + monitoringCost;
+    acrHtml += `<tr${m === pricingModel ? ' style="background:var(--lt-blue);font-weight:600;"' : ''}><td>${compareLabels[i]}${m === pricingModel ? ' ✓' : ''}</td><td>${compareSavings[i]}</td><td style="text-align:right;">$${fmt(totalAtModel)}</td><td style="text-align:right;">$${fmt(totalAtModel * 12)}</td></tr>`;
+  });
+  acrHtml += `</table>`;
+
+  const acrArea = document.getElementById('acrArea');
+  if (acrArea) acrArea.innerHTML = acrHtml;
+
+  // ============================================================
+  // RENDER RESULTS
+  // ============================================================
+  const projectTitle = `${esc(projectName)} — ${esc(customerName)}`;
+  document.getElementById('printTitle').textContent = `Azure Virtual Desktop — Solution Sizing Report`;
+  document.getElementById('printMeta').innerHTML = `<div><strong>Project:</strong> ${esc(projectName)}</div><div><strong>Customer:</strong> ${esc(customerName)}</div><div><strong>Prepared By:</strong> ${preparedBy || 'N/A'}</div><div><strong>Date:</strong> ${reportDate}</div><div><strong>Region:</strong> ${esc(region)}</div><div><strong>Deployment:</strong> ${deployPurpose.toUpperCase()}</div>`;
+  // Also populate print footer
+  const pf = document.querySelector('.print-footer');
+  if (pf) pf.innerHTML = `Microsoft Qatar · Cloud & AI Solutions | Azure Virtual Desktop — Enterprise Solution Sizer | ${esc(customerName)} | ${reportDate}<br>Based on Microsoft Official AVD Documentation | May 2026<br>Solution developed by Zahir Hussain Shah · Sr. Solution Engineer, Cloud & AI – Infra · zashah@microsoft.com`;
+
+  let html = '';
+
+  // === Executive Summary ===
+  html += `<div class="card"><h3>📊 Executive Summary — ${esc(projectTitle)}</h3>`;
+  html += `<p style="font-size:12px;color:var(--gray);margin-bottom:10px;">Deployment: <strong>${deployPurpose.toUpperCase()}</strong> | Region: <strong>${esc(region)}</strong> | Metadata: <strong>${esc(metaRegion)}</strong> | Prepared: ${reportDate}</p>`;
+  html += `<div class="metric-grid">
+    <div class="m-box"><span class="num">${grandUsers.toLocaleString()}</span><span class="lbl">Total Users</span></div>
+    <div class="m-box"><span class="num">${personas.reduce((s,p)=>s+p.concurrentUsers,0).toLocaleString()}</span><span class="lbl">Concurrent Users</span></div>
+    <div class="m-box"><span class="num">${grandVMs}</span><span class="lbl">Session Host VMs</span></div>
+    <div class="m-box"><span class="num">${grandVcpu}</span><span class="lbl">Total vCPUs</span></div>
+    <div class="m-box"><span class="num">${grandRam.toLocaleString()}</span><span class="lbl">RAM (GB)</span></div>
+    <div class="m-box"><span class="num">${grandPools}</span><span class="lbl">Host Pools</span></div>
+    <div class="m-box"><span class="num">$${fmt(totalMonthlyCost)}</span><span class="lbl">Est. Monthly Cost</span></div>
+    <div class="m-box"><span class="num">$${fmt(perUserCost)}</span><span class="lbl">Per User/Month</span></div>
+  </div></div>`;
+
+  // === 1. Host Pool Architecture ===
+  html += `<div class="card"><h3>🏗️ 1. Host Pool Architecture</h3>`;
+  html += `<table id="tblHostPools"><tr><th>#</th><th>Persona</th><th>Pool Type</th><th>App Group</th><th>VM SKU</th><th>VMs</th><th>vCPUs</th><th>RAM (GB)</th><th>Users Served</th><th>OS</th><th>Load Balancing</th></tr>`;
+  let rowNum = 0;
+  results.forEach(r => {
+    r.pools.forEach(pool => {
+      rowNum++;
+      html += `<tr><td>${rowNum}</td><td>${esc(r.persona.name)}</td><td>${pool.type} (${pool.subtype})</td><td>${pool.appGroup}${pool.publishedApps ? '<br><span style="font-size:10px;color:var(--gray);">'+esc(pool.publishedApps)+'</span>' : ''}</td><td>Standard_${pool.vmSku}</td><td>${pool.vmCount}</td><td>${pool.totalVcpu}</td><td>${pool.totalRam}</td><td>${pool.concurrentUsers}</td><td>${esc(pool.os)}</td><td>${pool.lb}</td></tr>`;
+    });
+  });
+  html += `<tr class="total-row"><td colspan="5"><strong>TOTAL</strong></td><td><strong>${grandVMs}</strong></td><td><strong>${grandVcpu}</strong></td><td><strong>${grandRam}</strong></td><td><strong>${personas.reduce((s,p)=>s+p.concurrentUsers,0)}</strong></td><td colspan="2"></td></tr>`;
+  html += `</table></div>`;
+
+  // === 2. Compute Sizing Detail ===
+  html += `<div class="card"><h3>🔢 2. Compute Sizing Detail</h3>`;
+  results.forEach(r => {
+    r.pools.forEach(pool => {
+      if (pool.type === 'Pooled') {
+        html += `<h4 style="color:var(--dk-blue);">${esc(r.persona.name)} — Pooled (Multi-Session)</h4>`;
+        html += `<div class="formula">
+Workload: ${capitalize(r.persona.workload)} → ${pool.upv} users/vCPU (Microsoft guideline)<br>
+Users per VM = ${pool.vcpu} vCPUs × ${pool.upv} users/vCPU = <strong>${pool.usersPerVm} users/VM</strong><br>
+Concurrent users = ${r.persona.users} total × ${r.persona.conc}% = <strong>${r.persona.concurrentUsers}</strong><br>
+VMs required = ⌈${r.persona.concurrentUsers} ÷ ${pool.usersPerVm}⌉ ${pool.redundancy?'+ 1 (N+1)':''} = <strong>${pool.vmCount} VMs</strong>
+</div>`;
+      } else {
+        html += `<h4 style="color:var(--dk-blue);">${esc(r.persona.name)} — Personal (Single-Session)</h4>`;
+        html += `<div class="formula">
+Workload: ${capitalize(r.persona.workload)} → VM: Standard_${pool.vmSku} (${pool.vcpu} vCPU, ${pool.ram} GB)<br>
+1 VM per user → ${pool.vmCount} VMs${pool.isPoc ? ` (POC subset: ${pool.pocSubset} of ${pool.fullCount})` : ''}
+</div>`;
+      }
+    });
+  });
+  html += `<span class="doc-ref"><a href="https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/session-host-virtual-machine-sizing-guidelines" target="_blank">Source: MS Learn — Session host VM sizing guidelines for AVD</a></span></div>`;
+
+  // === 3. Storage Sizing ===
+  html += `<div class="card"><h3>💾 3. Storage Sizing</h3>`;
+  html += `<h4>FSLogix Profile Storage</h4>`;
+  html += `<table id="tblStorage"><tr><th>Persona</th><th>Users</th><th>Profile/User</th><th>Total Storage</th><th>IOPS (baseline + per-GiB)</th></tr>`;
+  personas.forEach(p => {
+    const stor = p.users * profileGB;
+    const iops = 400 + stor;
+    html += `<tr><td>${esc(p.name)}</td><td>${p.users}</td><td>${profileGB} GB</td><td>${stor >= 1024 ? (stor/1024).toFixed(1)+' TB' : stor+' GB'}</td><td>${iops.toLocaleString()}</td></tr>`;
+  });
+  html += `<tr class="total-row"><td><strong>TOTAL</strong></td><td>${grandUsers}</td><td>${profileGB} GB</td><td>${totalProfileGB >= 1024 ? (totalProfileGB/1024).toFixed(1)+' TB' : totalProfileGB+' GB'}</td><td>${profileIOPS.toLocaleString()}</td></tr></table>`;
+  html += `<div class="formula">Azure Files Premium IOPS = 400 (baseline) + 1 IOPS per GiB provisioned<br>Backend: ${storageBackend.replace(/-/g,' ')} | Redundancy: ${storageRedundancy}</div>`;
+  html += `<h4>OS Disks</h4><table id="tblOsDisks"><tr><th>Disk Type</th><th>Size</th><th>Qty</th><th>Unit Cost/mo</th><th>Total/mo</th></tr>`;
+  html += `<tr><td>${osDiskName}</td><td>${osDiskSize} GiB</td><td>${grandVMs}</td><td>$${osDiskCost.toFixed(2)}</td><td>$${fmt(grandVMs * osDiskCost)}</td></tr></table>`;
+  html += `</div>`;
+
+  // === 4. Identity Components ===
+  html += `<div class="card"><h3>🔐 4. Identity Infrastructure</h3>`;
+  html += `<table id="tblIdentity"><tr><th>Component</th><th>Specification</th><th>Est. Cost/mo</th></tr>`;
+  identityComponents.forEach(c => {
+    html += `<tr><td>${esc(c.name)}</td><td>${esc(c.spec)}</td><td>${c.cost > 0 ? '$'+fmt(c.cost) : 'Included'}</td></tr>`;
+  });
+  html += `<tr><td colspan="2"><strong>Identity Model: ${identityModel.replace(/-/g,' ').toUpperCase()}</strong></td><td>Join: ${esc(joinType)}</td></tr></table>`;
+  html += `<p style="font-size:11px;margin-top:6px;color:var(--gray);">SSO: ${document.getElementById('ssoEnabled').value} | MFA: ${document.getElementById('mfaEnabled').value} | Conditional Access: ${document.getElementById('condAccess').value} | RDP Shortpath: ${document.getElementById('rdpShortpath').value}</p>`;
+  html += `<span class="doc-ref"><a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/prerequisites#identity" target="_blank">Source: MS Learn — AVD Prerequisites: Identity</a></span></div>`;
+
+  // === 5. Network Requirements ===
+  html += `<div class="card"><h3>🌐 5. Network Requirements</h3>`;
+  html += `<table id="tblNetwork"><tr><th>Component</th><th>Value</th><th>Est. Cost/mo</th></tr>`;
+  html += `<tr><td>Subnet Size Required</td><td>${subnetSize} (${subnetIPs} IPs needed)</td><td>—</td></tr>`;
+  html += `<tr><td>Internet Egress</td><td>${totalEgressGB.toLocaleString()} GB/mo (${egressPerUser} GB/user × ${grandUsers} users)</td><td>$${fmt(egressCost)}</td></tr>`;
+  html += `<tr><td>Free Egress Tier</td><td>${freeEgressGB} GB/mo (included)</td><td>—</td></tr>`;
+  if (firewallCost) html += `<tr><td>Azure Firewall</td><td>${fw === 'premium' ? 'Premium' : 'Standard'}</td><td>$${fmt(firewallCost)}</td></tr>`;
+  if (vpnCost) html += `<tr><td>VPN Gateway</td><td>${vpn.replace('vpn-','VpnGw')}</td><td>$${fmt(vpnCost)}</td></tr>`;
+  html += `<tr class="total-row"><td colspan="2"><strong>Total Networking</strong></td><td><strong>$${fmt(networkCost)}</strong></td></tr></table>`;
+  html += `<div class="callout info"><strong>📐 Network Requirement</strong>RTT latency from client to Azure region must be &lt; 150 ms. Reverse connection on TCP 443 — no inbound port 3389 needed.</div></div>`;
+
+  // === 6. BCDR Summary ===
+  html += `<div class="card"><h3>🛡️ 6. Business Continuity &amp; DR</h3>`;
+  html += `<table id="tblBCDR"><tr><th>Parameter</th><th>Configuration</th></tr>`;
+  html += `<tr><td>HA Approach</td><td>${haApproach.replace(/-/g,' ')}</td></tr>`;
+  html += `<tr><td>RTO Target</td><td>${document.getElementById('rtoTarget').value} hours</td></tr>`;
+  html += `<tr><td>RPO Target</td><td>${document.getElementById('rpoTarget').value} hours</td></tr>`;
+  html += `<tr><td>Backup Strategy</td><td>${document.getElementById('backupStrategy').value.replace(/-/g,' ')}</td></tr>`;
+  if (haApproach !== 'single') {
+    html += `<tr><td>DR Region</td><td>${document.getElementById('drRegion').value}</td></tr>`;
+    html += `<tr><td>Image Replication</td><td>${document.getElementById('imageReplication').value}</td></tr>`;
+    html += `<tr><td>Profile Replication</td><td>${document.getElementById('profileReplication').value.replace(/-/g,' ')}</td></tr>`;
+    html += `<tr><td>DR Additional Cost (est.)</td><td>$${fmt(drCost)}/mo</td></tr>`;
+  }
+  html += `</table></div>`;
+
+  // === 7. Monthly Cost Estimate ===
+  html += `<div class="card"><h3>💰 7. Monthly Cost Estimate</h3>`;
+  html += `<div class="disclaimer"><strong>⚠️ Pricing Disclaimer</strong>These are indicative estimates based on Microsoft published rates as of <strong>May 2026 (East US baseline)</strong>. Qatar Central prices may differ by 5–15%. <strong>Always verify on <a href="https://azure.microsoft.com/pricing/calculator/" target="_blank">Azure Pricing Calculator</a></strong>.</div>`;
+  html += `<table id="tblCost"><tr><th>Category</th><th>Detail</th><th>Est. Monthly Cost</th></tr>`;
+  html += `<tr><td>Compute — Session Hosts</td><td>${grandVMs} VMs × ${pricingModel.toUpperCase()} (${runtimeHours} hrs/mo)</td><td>$${fmt(grandComputeCost)}</td></tr>`;
+  html += `<tr><td>Storage — OS Disks</td><td>${grandVMs} × ${osDiskName}</td><td>$${fmt(grandVMs * osDiskCost)}</td></tr>`;
+  html += `<tr><td>Storage — FSLogix Profiles</td><td>${(totalProfileGB/1024).toFixed(1)} TB on ${storageBackend.replace(/-/g,' ')}</td><td>$${fmt(profileStorageCost)}</td></tr>`;
+  html += `<tr><td>Networking</td><td>Egress + Firewall + VPN</td><td>$${fmt(networkCost)}</td></tr>`;
+  html += `<tr><td>Identity Infrastructure</td><td>${identityModel.replace(/-/g,' ')}</td><td>$${fmt(identityCost)}</td></tr>`;
+  html += `<tr><td>Licensing — External Users</td><td>${extUsers} users × ${externalPricing === 'full' ? '$10' : externalPricing === 'apps' ? '$5.50' : '$0'}</td><td>$${fmt(licenseCost)}</td></tr>`;
+  if (drCost > 0) html += `<tr><td>DR — Additional Resources</td><td>${haApproach.replace(/-/g,' ')}</td><td>$${fmt(drCost)}</td></tr>`;
+  html += `<tr><td>Monitoring — Log Analytics</td><td>~$5/VM estimate</td><td>$${fmt(monitoringCost)}</td></tr>`;
+  html += `<tr class="total-row"><td colspan="2"><strong>ESTIMATED TOTAL</strong></td><td><strong>$${fmt(totalMonthlyCost)}/month</strong></td></tr>`;
+  html += `<tr class="total-row"><td colspan="2"><strong>Per User / Month</strong></td><td><strong>$${fmt(perUserCost)}</strong></td></tr>`;
+  html += `</table></div>`;
+
+  // === 8. Cost Comparison ===
+  html += `<div class="card"><h3>📉 8. Cost Comparison — Pricing Models</h3>`;
+  html += `<table id="tblCompare"><tr><th>Pricing Model</th><th>Discount</th><th>Compute/mo</th><th>Total/mo</th><th>Per User/mo</th></tr>`;
+  const baseCostNonCompute = grandStorageCost + networkCost + identityCost + licenseCost + drCost + monitoringCost;
+  // Compute base PAYG
+  let baseComputePAYG = 0;
+  results.forEach(r => r.pools.forEach(pool => {
+    const vmPayg = VM_CATALOG.find(v => v.sku === pool.vmSku)?.payg || PERSONAL_VM[r.persona.workload]?.payg || 251;
+    baseComputePAYG += pool.vmCount * vmPayg * (runtimeHours / 744);
+  }));
+  compareModels.forEach((model, i) => {
+    const d = DISCOUNT[model];
+    const comp = baseComputePAYG * d;
+    const total = comp + baseCostNonCompute;
+    const pu = grandUsers > 0 ? total / grandUsers : 0;
+    html += `<tr ${model===pricingModel?'style="background:var(--lt-blue);font-weight:600;"':''}><td>${compareLabels[i]}${model===pricingModel?' ✓':''}</td><td>${compareSavings[i]}</td><td>$${fmt(comp)}</td><td>$${fmt(total)}</td><td>$${fmt(pu)}</td></tr>`;
+  });
+  html += `</table></div>`;
+
+  // === 9. Azure Pricing Calculator Input Sheet ===
+  html += `<div class="card"><h3>🧮 9. Azure Pricing Calculator — Input Sheet</h3>`;
+  html += `<p style="font-size:12px;margin-bottom:8px;">Use these values in the <a href="https://azure.microsoft.com/pricing/calculator/" target="_blank">Azure Pricing Calculator</a> for accurate regional pricing.</p>`;
+  html += `<table id="tblPricingCalc"><tr><th>Resource</th><th>SKU / Type</th><th>Quantity</th><th>Region</th><th>Hours/mo</th></tr>`;
+  results.forEach(r => r.pools.forEach(pool => {
+    html += `<tr><td>Virtual Machine — ${esc(r.persona.name)} (${pool.type})</td><td>Standard_${pool.vmSku}</td><td>${pool.vmCount}</td><td>${esc(region)}</td><td>${runtimeHours}</td></tr>`;
+  }));
+  html += `<tr><td>Managed Disk — OS</td><td>${osDiskName}</td><td>${grandVMs}</td><td>${esc(region)}</td><td>—</td></tr>`;
+  html += `<tr><td>Azure Files — FSLogix Profiles</td><td>${storageBackend.replace(/-/g,' ')} (${storageRedundancy})</td><td>${totalProfileGB} GiB</td><td>${esc(region)}</td><td>—</td></tr>`;
+  html += `<tr><td>Bandwidth — Internet Egress</td><td>Outbound data transfer</td><td>${totalEgressGB.toLocaleString()} GB/mo</td><td>${esc(region)}</td><td>—</td></tr>`;
+  identityComponents.filter(c => c.cost > 0).forEach(c => {
+    html += `<tr><td>Identity — ${esc(c.name)}</td><td>${esc(c.spec)}</td><td>1</td><td>${esc(region)}</td><td>744</td></tr>`;
+  });
+  html += `</table></div>`;
+
+  // === 10. Autoscale Configuration (only if pooled pools exist) ===
+  const hasPooled = results.some(r => r.pools.some(p => p.type === 'Pooled'));
+  if (hasPooled) {
+  html += `<div class="card"><h3>⚡ 10. Autoscale Schedule (Recommended)</h3>`;
+  html += `<table id="tblAutoscale"><tr><th>Phase</th><th>Time (${document.getElementById('timeZone').value.split('(')[0].trim()})</th><th>Action</th><th>Load Balancing</th></tr>`;
+  const bizStart = '07:00', peakStart = '09:00', rampDown = '17:00', offPeak = '19:00';
+  html += `<tr><td>Ramp-up</td><td>${bizStart} – ${peakStart}</td><td>Start turning on hosts; min hosts active</td><td>Breadth-first</td></tr>`;
+  html += `<tr><td>Peak Hours</td><td>${peakStart} – ${rampDown}</td><td>All required hosts running</td><td>Breadth-first</td></tr>`;
+  html += `<tr><td>Ramp-down</td><td>${rampDown} – ${offPeak}</td><td>Drain &amp; deallocate idle hosts</td><td>Depth-first</td></tr>`;
+  html += `<tr><td>Off-peak</td><td>${offPeak} – ${bizStart}</td><td>Minimum hosts only (~10%)</td><td>Depth-first</td></tr>`;
+  html += `</table>`;
+  html += `<div class="formula">Estimated runtime: ${runtimeHours} hours/month (${runtimeModel})<br>RBAC required: Desktop Virtualization Power On Off Contributor role on subscription</div>`;
+  html += `<span class="doc-ref"><a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/autoscale-create-assign-scaling-plan" target="_blank">Source: MS Learn — Create autoscale scaling plan</a></span></div>`;
+  } // end if (hasPooled)
+
+  // === 11. Implementation Checklist ===
+  html += `<div class="card"><h3>✅ 11. Implementation Checklist</h3>`;
+  html += `<table id="tblChecklist"><tr><th>Area</th><th>Requirement</th><th>Status</th></tr>`;
+  const checklist = [
+    ['Subscription','Azure subscription with Microsoft.DesktopVirtualization provider registered',''],
+    ['Identity',`${identityModel.replace(/-/g,' ')} — ${joinType} configured`,''],
+    ['Identity','User accounts synced to Entra ID (hybrid identities if AD DS)',''],
+    ['Networking',`VNet with subnet ${subnetSize} in ${region}`,''],
+    ['Networking','Required AVD URLs unblocked (TCP 443)',''],
+    ['Networking','RTT latency < 150 ms from client network',''],
+    ['Compute',`${grandVMs} × Standard_${results[0]?.pools[0]?.vmSku || 'D8s_v5'} quota available in ${region}`,''],
+    ['Storage',`${storageBackend.replace(/-/g,' ')} — ${(totalProfileGB/1024).toFixed(1)} TB provisioned`,''],
+    ['Image','Golden image prepared in Azure Compute Gallery',''],
+    ['FSLogix','FSLogix Profile Container configured',''],
+    ['Licensing',`${internalLicense} licenses assigned to ${grandUsers} users`,''],
+    ['RBAC','Desktop Virtualization Contributor role assigned',''],
+    ['RBAC','Desktop Virtualization Power On Off Contributor for autoscale',''],
+    ['Security','Conditional Access policies configured',''],
+    ['Monitoring','Azure Monitor / AVD Insights enabled',''],
+  ];
+  checklist.forEach(c => {
+    html += `<tr><td><strong>${c[0]}</strong></td><td>${c[1]}</td><td>☐</td></tr>`;
+  });
+  html += `</table></div>`;
+
+  // === 12. Design Advisories (only show triggered advisories) ===
+  let advisoryHtml = '';
+  if (!METADATA_REGIONS.includes(region)) {
+    advisoryHtml += `<div class="callout warn"><strong>⚠️ Metadata Region</strong>AVD host pool metadata cannot be stored in ${esc(region)}. Metadata will be stored in <strong>${esc(metaRegion)}</strong>. Session hosts run in ${esc(region)}. <a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/prerequisites#azure-regions" target="_blank">MS Learn</a></div>`;
+  }
+  if (getToggleVal('dataResidency') === 'government') {
+    advisoryHtml += `<div class="callout warn"><strong>⚠️ Data Residency</strong>Government/regulated deployment: metadata stored in ${esc(metaRegion)}. Consult compliance team regarding data sovereignty, encryption requirements, and network isolation.</div>`;
+  }
+  if (osDiskName.toLowerCase().includes('standard hdd')) {
+    advisoryHtml += `<div class="callout warn"><strong>⚠️ Standard HDD Retirement</strong>Microsoft is retiring Standard HDD as an OS disk option on September 8, 2028. Use Standard SSD (E-series) as minimum baseline. <a href="https://learn.microsoft.com/en-us/azure/virtual-machines/disks-hdd-os-retirement" target="_blank">MS Learn</a></div>`;
+  }
+  if (extUsers > 0 && internalLicense.includes('RDS')) {
+    advisoryHtml += `<div class="callout warn"><strong>⚠️ External User Licensing</strong>Per-user access pricing is <strong>not available</strong> for Windows Server operating systems. External users must use Windows 11/10 client OS session hosts. <a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/licensing" target="_blank">MS Learn</a></div>`;
+  }
+  if (results.some(r => r.pools.some(p => p.type === 'Pooled' && p.vcpu < 4))) {
+    advisoryHtml += `<div class="callout warn"><strong>⚠️ VM Sizing</strong>VMs with fewer than 4 vCPUs are not recommended for multi-session. UI components require 2+ parallel threads; under 4 cores causes instability. <a href="https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/session-host-virtual-machine-sizing-guidelines" target="_blank">MS Learn</a></div>`;
+  }
+  // Build advisory items as array for table
+  const advisoryItems = [];
+  if (!METADATA_REGIONS.includes(region)) advisoryItems.push(['Metadata Region', `Host pool metadata stored in ${metaRegion} (not available in ${region}). Session hosts run in ${region}.`]);
+  if (getToggleVal('dataResidency') === 'government') advisoryItems.push(['Data Residency', `Government/regulated deployment: metadata in ${metaRegion}. Consult compliance team regarding data sovereignty.`]);
+  if (osDiskName.toLowerCase().includes('standard hdd')) advisoryItems.push(['Standard HDD Retirement', 'Microsoft retiring Standard HDD as OS disk on Sep 8, 2028. Use Standard SSD (E-series) as minimum.']);
+  if (extUsers > 0 && internalLicense.includes('RDS')) advisoryItems.push(['External User Licensing', 'Per-user access pricing not available for Windows Server OS. External users must use Windows 11/10 client OS.']);
+  if (results.some(r => r.pools.some(p => p.type === 'Pooled' && p.vcpu < 4))) advisoryItems.push(['VM Sizing', 'VMs with <4 vCPUs not recommended for multi-session. Under 4 cores causes UI instability.']);
+  if (advisoryHtml) {
+    // Hidden table for Excel export
+    let advTable = `<table id="tblAdvisories" style="display:none;"><tr><th>Advisory</th><th>Detail</th></tr>`;
+    advisoryItems.forEach(a => advTable += `<tr><td>${esc(a[0])}</td><td>${esc(a[1])}</td></tr>`);
+    advTable += `</table>`;
+    html += `<div class="card"><h3>📌 12. Design Advisories</h3>${advisoryHtml}${advTable}</div>`;
+  }
+
+  // Footer
+  html += `<div style="text-align:center;padding:24px 20px;border-top:2px solid var(--border);margin-top:24px;">
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="22" viewBox="0 0 493 107"><rect x="1" y="1" width="49" height="49" fill="#f25022"/><rect x="52" y="1" width="49" height="49" fill="#7fba00"/><rect x="1" y="52" width="49" height="49" fill="#00a4ef"/><rect x="52" y="52" width="49" height="49" fill="#ffb900"/><text x="120" y="76" fill="#003B73" font-family="Segoe UI,sans-serif" font-size="82" font-weight="600" letter-spacing="-1">Microsoft</text></svg>
+      <span style="color:#ccc;">|</span>
+      <strong style="color:var(--dk-blue);font-size:12px;letter-spacing:.3px;">Cloud & AI Solutions · Qatar</strong>
+    </div>
+    <div style="font-size:11px;color:var(--gray);line-height:1.6;">
+      Azure Virtual Desktop — Enterprise Solution Sizer<br>
+      100% based on <a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/" target="_blank">Microsoft Official AVD Documentation</a>. Reference prices May 2026 — verify on <a href="https://azure.microsoft.com/pricing/calculator/" target="_blank">Azure Pricing Calculator</a>.<br>
+      <span class="doc-ref"><a href="https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/session-host-virtual-machine-sizing-guidelines" target="_blank">VM Sizing Guidelines</a> | <a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/prerequisites" target="_blank">AVD Prerequisites</a> | <a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/licensing" target="_blank">AVD Licensing</a> | <a href="https://learn.microsoft.com/en-us/azure/virtual-desktop/understand-estimate-costs" target="_blank">Estimating AVD Costs</a></span>
+    </div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:#605E5C;line-height:1.5;">
+      <span style="color:var(--blue);font-weight:600;">Accelerating AVD Opportunities</span><br>
+      Developed by Zahir Hussain Shah · Sr. Solution Engineer, Cloud & AI – Infra · <a href="mailto:zashah@microsoft.com">zashah@microsoft.com</a><br>
+      Generated: ${new Date().toLocaleString()}
+    </div></div>`;
+
+  document.getElementById('resultsArea').innerHTML = html;
+
+  // Store summary data for Excel export (avoids re-scraping DOM)
+  window._sizingSummary = {
+    grandUsers, grandVMs, grandVcpu, grandRam, grandPools,
+    concurrentUsers: personas.reduce((s,p) => s + p.concurrentUsers, 0),
+    totalMonthlyCost, perUserCost, deployPurpose, region, metaRegion,
+    pricingModel, runtimeHours,
+    results, personas, profileGB,
+    osDiskName, osDiskCost,
+    storageBackend, storageRedundancy,
+    grandComputeCost, grandStorageCost, profileStorageCost, totalProfileGB,
+    networkCost, identityCost, licenseCost, drCost, monitoringCost
+  };
+}
+
+// ============================================================
+// EXPORT FUNCTIONS
+// ============================================================
+function exportPDF() {
+  // Ensure results are calculated
+  if (!document.getElementById('resultsArea').innerHTML.trim()) calculate();
+  // Show only results tab for print (CSS handles hiding others via #tab9 selector)
+  document.getElementById('tab9').classList.add('active');
+  window.print();
+  // Restore current tab
+  setTimeout(() => {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab' + currentTab).classList.add('active');
+  }, 500);
+}
+
+function exportExcel() {
+  if (!document.getElementById('resultsArea').innerHTML.trim()) calculate();
+
+  const projectName = document.getElementById('projectName').value || 'AVD Sizing';
+  const customerName = document.getElementById('customerName').value || 'Customer';
+  const preparedBy = document.getElementById('preparedBy').value || '';
+  const reportDate = document.getElementById('reportDate').value || '';
+  const region = document.getElementById('azureRegion').value;
+  const deployPurpose = getToggleVal('deployPurpose');
+
+  // ── OOXML .xlsx builder (zero dependencies) ──
+  // A .xlsx is a ZIP archive of XML files. We build an uncompressed ZIP.
+
+  // Shared strings table
+  const sharedStrings = [];
+  const ssMap = new Map();
+  function ssIdx(str) {
+    str = String(str ?? '');
+    if (ssMap.has(str)) return ssMap.get(str);
+    const idx = sharedStrings.length;
+    sharedStrings.push(str);
+    ssMap.set(str, idx);
+    return idx;
+  }
+
+  // Build rows from result tables
+  const rows = [];
+  function addRow(cells, styleOverride) {
+    rows.push(cells.map(c => ({
+      value: c,
+      style: styleOverride ?? (typeof c === 'number' ? 2 : 0)
+    })));
+  }
+  function addHeaderRow(cells) {
+    rows.push(cells.map(c => ({value: c, style: 1})));
+  }
+  function addBlank() { rows.push([]); }
+
+  // Title + metadata
+  addRow(['Azure Virtual Desktop — Solution Sizing Report'], 3);
+  addRow(['Microsoft Qatar · Cloud & AI Solutions']);
+  addRow(['Opportunity Sizing']);
+  addBlank();
+  addRow(['Project:', projectName]);
+  addRow(['Customer:', customerName]);
+  addRow(['Prepared By:', preparedBy]);
+  addRow(['Date:', reportDate]);
+  addRow(['Region:', region]);
+  addRow(['Deployment:', deployPurpose.toUpperCase()]);
+  addBlank();
+
+  // Executive Summary (from stored calculation data)
+  const S = window._sizingSummary || {};
+  addRow(['Executive Summary'], 3);
+  addHeaderRow(['Metric', 'Value']);
+  addRow(['Total Users', S.grandUsers || '—']);
+  addRow(['Concurrent Users', S.concurrentUsers || '—']);
+  addRow(['Session Host VMs', S.grandVMs || '—']);
+  addRow(['Total vCPUs', S.grandVcpu || '—']);
+  addRow(['RAM (GB)', S.grandRam || '—']);
+  addRow(['Host Pools', S.grandPools || '—']);
+  addRow(['Est. Monthly Cost', S.totalMonthlyCost != null ? '$' + S.totalMonthlyCost.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) : '—']);
+  addRow(['Per User / Month', S.perUserCost != null ? '$' + S.perUserCost.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) : '—']);
+  addRow(['Pricing Model', (S.pricingModel || '—').toUpperCase()]);
+  addRow(['Runtime Hours/mo', S.runtimeHours || '—']);
+  addBlank();
+
+  // Compute Sizing Detail (from stored calculation data)
+  if (S.results && S.results.length) {
+    addRow(['Compute Sizing Detail'], 3);
+    addHeaderRow(['Persona', 'Pool Type', 'App Group', 'VM SKU', 'vCPUs/VM', 'RAM/VM (GB)', 'Users/VM', 'VMs', 'Concurrent Users', 'Monthly Cost']);
+    S.results.forEach(r => {
+      r.pools.forEach(pool => {
+        addRow([
+          r.persona.name,
+          pool.type + ' (' + pool.subtype + ')',
+          pool.appGroup + (pool.publishedApps ? ' — ' + pool.publishedApps : ''),
+          'Standard_' + pool.vmSku,
+          pool.vcpu,
+          pool.ram,
+          pool.usersPerVm,
+          pool.vmCount,
+          pool.concurrentUsers,
+          '$' + pool.monthlyCost.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})
+        ]);
+      });
+    });
+    addBlank();
+  }
+
+  // Extract tables from DOM
+  const tables = ['tblHostPools','tblStorage','tblOsDisks','tblIdentity','tblNetwork','tblBCDR','tblCost','tblCompare','tblPricingCalc','tblAutoscale','tblChecklist','tblAdvisories'];
+  const titles = ['Host Pool Architecture','Storage Sizing','OS Disks','Identity Infrastructure','Network Requirements','Business Continuity & DR','Monthly Cost Estimate','Cost Comparison','Pricing Calculator Inputs','Autoscale Schedule','Implementation Checklist','Design Advisories'];
+
+  tables.forEach((id, idx) => {
+    const tbl = document.getElementById(id);
+    if (!tbl) return;
+    addBlank();
+    addRow([titles[idx]], 3);
+    const trs = tbl.querySelectorAll('tr');
+    trs.forEach((tr, ri) => {
+      const cells = tr.querySelectorAll('th, td');
+      const vals = [];
+      cells.forEach(cell => {
+        let txt = cell.innerText.trim();
+        vals.push(txt);
+      });
+      const isTotalRow = tr.classList.contains('total-row');
+      if (ri === 0) addHeaderRow(vals);
+      else if (isTotalRow) rows.push(vals.map(c => ({value: c, style: 6})));
+      else if (ri % 2 === 0) rows.push(vals.map(c => ({value: c, style: 5})));
+      else addRow(vals);
+    });
+  });
+
+  addBlank();
+  addRow(['Reference prices are indicative estimates (May 2026, East US baseline). Verify on Azure Pricing Calculator.']);
+  addBlank();
+  addRow(['Solution developed by: Zahir Hussain Shah | Sr. Solution Engineer, Cloud & AI – Infra | Microsoft Qatar | zashah@microsoft.com']);
+
+  // ── Build XML parts ──
+  const xmlEsc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  // styles.xml — 8 styles:
+  //  0 = normal (Calibri 11, thin borders)
+  //  1 = header (bold white on dk-blue, thin borders)
+  //  2 = number (right-aligned, thin borders)
+  //  3 = title (bold 14, no fill)
+  //  4 = subtitle (bold 11, light blue fill, thin borders)
+  //  5 = alternating row (light gray fill, thin borders)
+  //  6 = total row (bold, medium blue fill, thin borders)
+  //  7 = currency ($#,##0.00, thin borders)
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <numFmts count="1">
+    <numFmt numFmtId="164" formatCode="&quot;$&quot;#,##0.00"/>
+  </numFmts>
+  <fonts count="5">
+    <font><sz val="11"/><name val="Calibri"/></font>
+    <font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+    <font><b/><sz val="14"/><name val="Calibri"/></font>
+    <font><b/><sz val="11"/><name val="Calibri"/></font>
+    <font><b/><sz val="11"/><color rgb="FF003B73"/><name val="Calibri"/></font>
+  </fonts>
+  <fills count="6">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF003B73"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFE8F1FB"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF3F4F6"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFC7E0F4"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border/>
+    <border>
+      <left style="thin"><color rgb="FFD1D5DB"/></left>
+      <right style="thin"><color rgb="FFD1D5DB"/></right>
+      <top style="thin"><color rgb="FFD1D5DB"/></top>
+      <bottom style="thin"><color rgb="FFD1D5DB"/></bottom>
+    </border>
+  </borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="8">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1"/>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1"/>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment horizontal="right"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="0" borderId="0" applyFont="1"/>
+    <xf numFmtId="0" fontId="3" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1"/>
+    <xf numFmtId="0" fontId="0" fillId="4" borderId="1" applyFill="1" applyBorder="1"/>
+    <xf numFmtId="0" fontId="4" fillId="5" borderId="1" applyFont="1" applyFill="1" applyBorder="1"/>
+    <xf numFmtId="164" fontId="0" fillId="0" borderId="1" applyNumberFormat="1" applyBorder="1"/>
+  </cellXfs>
+</styleSheet>`;
+
+  // Shared strings XML
+  let ssXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${0}" uniqueCount="${0}">`;
+  // Will be finalized after processing rows
+
+  // Build sheet data
+  const colLetter = n => {
+    let s = '';
+    while (n >= 0) { s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26) - 1; }
+    return s;
+  };
+
+  let sheetData = '';
+  rows.forEach((row, ri) => {
+    if (row.length === 0) { sheetData += `<row r="${ri+1}"/>`; return; }
+    sheetData += `<row r="${ri+1}">`;
+    row.forEach((cell, ci) => {
+      const ref = colLetter(ci) + (ri+1);
+      const val = cell.value;
+      // Try to detect numbers: strip $, commas, %, check if numeric
+      const strVal = String(val);
+      const hasDollar = strVal.startsWith('$');
+      const cleanVal = strVal.replace(/[$,]/g, '').trim();
+      const isNum = cleanVal !== '' && !isNaN(cleanVal) && !/^\d{4}-\d{2}/.test(cleanVal);
+      if (isNum && cell.style !== 1 && cell.style !== 3 && cell.style !== 6) {
+        const numStyle = hasDollar ? 7 : cell.style;
+        sheetData += `<c r="${ref}" s="${numStyle}"><v>${parseFloat(cleanVal)}</v></c>`;
+      } else {
+        const si = ssIdx(val);
+        sheetData += `<c r="${ref}" t="s" s="${cell.style}"><v>${si}</v></c>`;
+      }
+    });
+    sheetData += `</row>`;
+  });
+
+  // Finalize shared strings
+  ssXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${sharedStrings.length}" uniqueCount="${sharedStrings.length}">`;
+  sharedStrings.forEach(s => { ssXml += `<si><t>${xmlEsc(s)}</t></si>`; });
+  ssXml += `</sst>`;
+
+  // Determine max columns and set column widths
+  const maxCols = Math.max(...rows.map(r => r.length), 1);
+  let colsXml = '<cols>';
+  for (let i = 0; i < maxCols; i++) {
+    const w = i === 0 ? 38 : i <= 2 ? 28 : 18;
+    colsXml += `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`;
+  }
+  colsXml += '</cols>';
+
+  const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+${colsXml}
+<sheetData>${sheetData}</sheetData>
+</worksheet>`;
+
+  const wbXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheets><sheet name="AVD Sizing" sheetId="1" r:id="rId1"/></sheets>
+</workbook>`;
+
+  const wbRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
+</Relationships>`;
+
+  const rootRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+  const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="xml" ContentType="application/xml"/>
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
+</Types>`;
+
+  // ── ZIP builder (store mode, no compression) ──
+  function zipBlob(files) {
+    const enc = new TextEncoder();
+    const parts = [];
+    const centralDir = [];
+    let offset = 0;
+
+    files.forEach(f => {
+      const nameBytes = enc.encode(f.name);
+      const dataBytes = enc.encode(f.content);
+      // Local file header
+      const lh = new Uint8Array(30 + nameBytes.length);
+      const lhView = new DataView(lh.buffer);
+      lhView.setUint32(0, 0x04034b50, true); // sig
+      lhView.setUint16(4, 20, true); // version needed
+      lhView.setUint16(6, 0, true);  // flags
+      lhView.setUint16(8, 0, true);  // compression: store
+      lhView.setUint16(10, 0, true); // mod time
+      lhView.setUint16(12, 0, true); // mod date
+      // CRC32
+      const crc = crc32(dataBytes);
+      lhView.setUint32(14, crc, true);
+      lhView.setUint32(18, dataBytes.length, true); // compressed
+      lhView.setUint32(22, dataBytes.length, true); // uncompressed
+      lhView.setUint16(26, nameBytes.length, true);
+      lhView.setUint16(28, 0, true); // extra len
+      lh.set(nameBytes, 30);
+
+      // Central directory entry
+      const cd = new Uint8Array(46 + nameBytes.length);
+      const cdView = new DataView(cd.buffer);
+      cdView.setUint32(0, 0x02014b50, true);
+      cdView.setUint16(4, 20, true);
+      cdView.setUint16(6, 20, true);
+      cdView.setUint16(8, 0, true);
+      cdView.setUint16(10, 0, true);
+      cdView.setUint16(12, 0, true);
+      cdView.setUint16(14, 0, true);
+      cdView.setUint32(16, crc, true);
+      cdView.setUint32(20, dataBytes.length, true);
+      cdView.setUint32(24, dataBytes.length, true);
+      cdView.setUint16(28, nameBytes.length, true);
+      cdView.setUint16(30, 0, true);
+      cdView.setUint16(32, 0, true);
+      cdView.setUint16(34, 0, true);
+      cdView.setUint16(36, 0, true);
+      cdView.setUint32(38, 0x20, true); // external attr
+      cdView.setUint32(42, offset, true); // local header offset
+      cd.set(nameBytes, 46);
+      centralDir.push(cd);
+
+      parts.push(lh, dataBytes);
+      offset += lh.length + dataBytes.length;
+    });
+
+    const cdOffset = offset;
+    let cdSize = 0;
+    centralDir.forEach(cd => { parts.push(cd); cdSize += cd.length; });
+
+    // End of central directory
+    const eocd = new Uint8Array(22);
+    const eocdView = new DataView(eocd.buffer);
+    eocdView.setUint32(0, 0x06054b50, true);
+    eocdView.setUint16(4, 0, true);
+    eocdView.setUint16(6, 0, true);
+    eocdView.setUint16(8, files.length, true);
+    eocdView.setUint16(10, files.length, true);
+    eocdView.setUint32(12, cdSize, true);
+    eocdView.setUint32(16, cdOffset, true);
+    eocdView.setUint16(20, 0, true);
+    parts.push(eocd);
+
+    return new Blob(parts, {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+
+  // CRC32 lookup table
+  function crc32(bytes) {
+    if (!crc32.table) {
+      crc32.table = new Uint32Array(256);
+      for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        crc32.table[i] = c;
+      }
+    }
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) crc = crc32.table[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  // Assemble ZIP
+  const blob = zipBlob([
+    {name: '[Content_Types].xml', content: contentTypesXml},
+    {name: '_rels/.rels', content: rootRelsXml},
+    {name: 'xl/workbook.xml', content: wbXml},
+    {name: 'xl/_rels/workbook.xml.rels', content: wbRelsXml},
+    {name: 'xl/styles.xml', content: stylesXml},
+    {name: 'xl/sharedStrings.xml', content: ssXml},
+    {name: 'xl/worksheets/sheet1.xml', content: sheetXml}
+  ]);
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeName = customerName.replace(/[^a-zA-Z0-9]/g, '-');
+  a.href = url;
+  a.download = `${safeName}-AVD-Sizing-${reportDate}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function capitalize(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
+function fmt(n) { return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+
+</script>
+</body>
+</html>
